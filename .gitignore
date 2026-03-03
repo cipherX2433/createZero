@@ -1,0 +1,15 @@
+# frontend
+frontend/node_modules
+frontend/.next
+
+# backend
+backend/node_modules
+
+# env files
+.env
+.env.local
+frontend/.env*
+backend/.env*
+
+# system
+.DS_Store
