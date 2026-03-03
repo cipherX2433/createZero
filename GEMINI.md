@@ -219,15 +219,8 @@ Use versioned SQL migrations
 Never edit production schema manually
 
 6️⃣ PERFORMANCE RULES
-6.1 Rate Limiting Rule
 
-Script generation must:
-
-Be rate-limited
-
-Enforce plan limits
-
-6.2 AI Cost Awareness
+6.1 AI Cost Awareness
 
 Always:
 

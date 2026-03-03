@@ -25,7 +25,11 @@ export default function Login() {
         });
 
         if (error) {
-            setError(error.message);
+            if (error.message.includes("rate limit")) {
+                setError("Email rate limit exceeded. Please try again later or check your Supabase Auth settings.");
+            } else {
+                setError(error.message);
+            }
             setIsLoading(false);
         } else {
             navigate("/dashboard");

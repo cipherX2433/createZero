@@ -12,14 +12,16 @@ export default function Signup() {
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
+        setSuccess(false);
 
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
@@ -28,9 +30,17 @@ export default function Signup() {
         });
 
         if (error) {
-            setError(error.message);
+            if (error.message.includes("rate limit")) {
+                setError("Email rate limit exceeded. Please try again later or disable 'Confirm email' in your Supabase project settings.");
+            } else {
+                setError(error.message);
+            }
             setIsLoading(false);
-        } else {
+        } else if (data.user && !data.session) {
+            // Email confirmation is required
+            setSuccess(true);
+            setIsLoading(false);
+        } else if (data.session) {
             navigate("/onboarding");
         }
     };
@@ -51,6 +61,11 @@ export default function Signup() {
                         {error && (
                             <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-md text-sm">
                                 {error}
+                            </div>
+                        )}
+                        {success && (
+                            <div className="bg-green-500/10 border border-green-500/50 text-green-500 p-3 rounded-md text-sm">
+                                Authentication sequence initiated. Please verify your email to proceed.
                             </div>
                         )}
                         <div className="space-y-2">
