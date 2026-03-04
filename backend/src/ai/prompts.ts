@@ -234,11 +234,11 @@ No explanation.
 JSON structure:
 
 {
-  "headline": "",
-  "subtext": "",
-  "hook_quote": "",
-  "key_points": ["", "", ""],
-  "cta": "",
+  "headline": "", (MAX 50 CHARS)
+  "subtext": "", (MAX 80 CHARS)
+  "hook_quote": "", (MAX 80 CHARS)
+  "key_points": ["", "", ""], (MAX 60 CHARS EACH)
+  "cta": "", (MAX 40 CHARS)
   "footer_line": "",
   "hashtags": ["", "", ""],
   "virality_score": 85,

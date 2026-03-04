@@ -18,12 +18,17 @@ export class AIService {
             const jsonMatch = text.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
                 try {
-                    return JSON.parse(jsonMatch[0]);
+                    // Try to fix missing closing quotes and braces
+                    let candidate = jsonMatch[0];
+                    if (!candidate.endsWith("}")) candidate += "}";
+                    return JSON.parse(candidate);
                 } catch (e2) {
-                    // Final attempt: aggressive cleanup (removing trailing commas, etc)
+                    // Final attempt: aggressive cleanup (removing trailing commas, bad characters)
                     const cleaned = jsonMatch[0]
                         .replace(/,\s*([\]}])/g, "$1") // remove trailing commas
-                        .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":'); // ensure keys are quoted
+                        .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // ensure keys are quoted
+                        .replace(/:\s*"/g, ': "') // space after colon
+                        .replace(/,\s*"/g, ', "'); // space after comma
                     return JSON.parse(cleaned);
                 }
             }

@@ -35,14 +35,14 @@ export default function SocialPostCanvas({
         {/* Headline */}
         <Text
           text={headline}
-          fontSize={72}
+          fontSize={60}
           fontFamily="Syne"
           fontStyle="800"
           fill="white"
           width={880}
           x={100}
-          y={120}
-          lineHeight={1.2}
+          y={100}
+          lineHeight={1.1}
           wrap="word"
         />
 
@@ -51,13 +51,13 @@ export default function SocialPostCanvas({
           <Text
             key={i}
             text={`${i + 1}. ${p}`}
-            fontSize={36}
+            fontSize={32}
             fontFamily="Syne"
             fill="white"
             width={840}
             x={120}
-            y={380 + i * 140}
-            lineHeight={1.4}
+            y={350 + i * 130}
+            lineHeight={1.3}
             wrap="word"
           />
         ))}
@@ -65,13 +65,13 @@ export default function SocialPostCanvas({
         {/* CTA */}
         <Text
           text={cta}
-          fontSize={44}
+          fontSize={40}
           fontFamily="Syne"
           fontStyle="700"
           fill="#FFD700"
           width={840}
           x={120}
-          y={920}
+          y={880}
           align="center"
           wrap="word"
         />
