@@ -1,93 +1,47 @@
-import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-    Sparkles, History, Send, Loader2, LogOut, Copy, Check,
-    Zap, Target, FileText, Hash, ChevronDown
-} from "lucide-react";
-import { apiService, Script } from "@/services/api.service";
+import { useState, useRef } from "react";
+import { apiService } from "@/services/api.service";
 import { useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
 
 const NICHES = [
-    "Tech / SaaS", "Finance / Investing", "Health & Fitness", "Personal Development",
-    "E-commerce", "Marketing", "AI & Automation", "Lifestyle", "Education", "Entrepreneurship",
+    { label: "Tech / SaaS", value: "tech_saas", colors: { primary: "#6366f1", secondary: "#0ea5e9", bg: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)", accent: "#a78bfa", tag: "#1e1b4b" } },
+    { label: "Health & Fitness", value: "health_fitness", colors: { primary: "#10b981", secondary: "#f59e0b", bg: "linear-gradient(135deg, #064e3b, #065f46, #14532d)", accent: "#6ee7b7", tag: "#052e16" } },
+    { label: "Finance & Investing", value: "finance", colors: { primary: "#f59e0b", secondary: "#10b981", bg: "linear-gradient(135deg, #1c1917, #292524, #1c1917)", accent: "#fcd34d", tag: "#1c1917" } },
+    { label: "Personal Branding", value: "personal_brand", colors: { primary: "#ec4899", secondary: "#8b5cf6", bg: "linear-gradient(135deg, #1a0533, #2d0a4e, #1a0533)", accent: "#f9a8d4", tag: "#500724" } },
+    { label: "E-Commerce / DTC", value: "ecommerce", colors: { primary: "#f97316", secondary: "#ef4444", bg: "linear-gradient(135deg, #1c0a00, #2c1200, #1c0a00)", accent: "#fed7aa", tag: "#431407" } },
+    { label: "Marketing & Growth", value: "marketing", colors: { primary: "#3b82f6", secondary: "#06b6d4", bg: "linear-gradient(135deg, #0a0a2e, #0d1b4b, #0a0a2e)", accent: "#93c5fd", tag: "#1e3a8a" } },
+    { label: "Mindset & Motivation", value: "mindset", colors: { primary: "#a78bfa", secondary: "#f472b6", bg: "linear-gradient(135deg, #0c001a, #1a0030, #0c001a)", accent: "#ddd6fe", tag: "#2e1065" } },
+    { label: "Education & Coaching", value: "education", colors: { primary: "#06b6d4", secondary: "#8b5cf6", bg: "linear-gradient(135deg, #0a1628, #0c2340, #0a1628)", accent: "#67e8f9", tag: "#083344" } },
 ];
 
-const PURPOSES = [
-    "Brand Awareness", "Lead Generation", "Product Launch", "Community Building",
-    "Drive Traffic", "Grow Following", "Educate Audience", "Go Viral", "Sell a Service",
+const GOALS = [
+    "Educate Audience",
+    "Drive Engagement",
+    "Build Authority",
+    "Generate Leads",
+    "Inspire & Motivate",
+    "Promote Product/Service",
+    "Grow Following",
+    "Spark Controversy / Debate",
 ];
-
-function CopyButton({ text }: { text: string }) {
-    const [copied, setCopied] = useState(false);
-    const handleCopy = () => {
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
-    return (
-        <button
-            onClick={handleCopy}
-            className="p-1.5 rounded-md text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition-colors"
-            title="Copy"
-        >
-            {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
-        </button>
-    );
-}
-
-function ScoreBar({ score }: { score: number }) {
-    const color = score >= 80 ? "bg-green-500" : score >= 60 ? "bg-yellow-500" : "bg-red-500";
-    return (
-        <div className="flex items-center gap-3">
-            <div className="flex-1 bg-slate-800 rounded-full h-2 overflow-hidden">
-                <div
-                    className={`h-2 rounded-full transition-all duration-700 ${color}`}
-                    style={{ width: `${score}%` }}
-                />
-            </div>
-            <span className={`text-sm font-bold tabular-nums ${score >= 80 ? "text-green-400" : score >= 60 ? "text-yellow-400" : "text-red-400"}`}>
-                {score}/100
-            </span>
-        </div>
-    );
-}
 
 export default function Dashboard() {
-    const [prompt, setPrompt] = useState("");
-    const [niche, setNiche] = useState("Tech / SaaS");
-    const [purpose, setPurpose] = useState("Brand Awareness");
-    const [description, setDescription] = useState("");
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [history, setHistory] = useState<Script[]>([]);
-    const [isHistoryLoading, setIsHistoryLoading] = useState(false);
-    const [currentScript, setCurrentScript] = useState<Script | null>(null);
-    const [generateError, setGenerateError] = useState<string | null>(null);
-    const [nicheOpen, setNicheOpen] = useState(false);
-    const [purposeOpen, setPurposeOpen] = useState(false);
-    const outputRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+    const [niche, setNiche] = useState("");
+    const [topic, setTopic] = useState("");
+    const [goal, setGoal] = useState("");
+    const [description, setDescription] = useState("");
+    const [view, setView] = useState("card");
+    const [loading, setLoading] = useState(false);
+    const [post, setPost] = useState<any>(null);
+    const [error, setError] = useState("");
+    const cardRef = useRef(null);
 
-    useEffect(() => { loadHistory(); }, []);
-
-    useEffect(() => {
-        if (currentScript && outputRef.current) {
-            outputRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-    }, [currentScript]);
-
-    const loadHistory = async () => {
-        setIsHistoryLoading(true);
-        try {
-            const data = await apiService.fetchScripts();
-            setHistory(data ?? []);
-        } catch (err) {
-            console.error("Failed to load history", err);
-        } finally {
-            setIsHistoryLoading(false);
-        }
+    const selectedNiche = NICHES.find(n => n.value === niche);
+    const colors = selectedNiche?.colors || {
+        primary: "#6366f1", secondary: "#0ea5e9",
+        bg: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
+        accent: "#a78bfa", tag: "#1e1b4b"
     };
 
     const handleSignout = () => {
@@ -96,305 +50,361 @@ export default function Dashboard() {
         navigate("/login");
     };
 
-    const handleGenerate = async () => {
-        if (!prompt.trim()) return;
-        setIsGenerating(true);
-        setGenerateError(null);
-        try {
-            // Combine topic + description into one rich prompt
-            const fullPrompt = description.trim()
-                ? `${prompt}. Additional context: ${description}`
-                : prompt;
-
-            const script = await apiService.generateScript({ prompt: fullPrompt, niche, purpose });
-            setCurrentScript(script);
-            setHistory((prev) => [script, ...prev]);
-        } catch (err: any) {
-            setGenerateError(err.message || "Generation failed");
-        } finally {
-            setIsGenerating(false);
+    async function generatePost() {
+        if (!niche || !topic || !goal) {
+            setError("Please fill in Target Niche, Topic, and Post Goal.");
+            return;
         }
-    };
+        setError("");
+        setLoading(true);
+        setPost(null);
+
+        try {
+            const nicheLabel = NICHES.find(n => n.value === niche)?.label || niche;
+            const script = await apiService.generateScript({
+                prompt: topic,
+                niche: nicheLabel,
+                purpose: goal,
+                description
+            });
+            // The API returns the script data matching the new fields (headline, subtext, hook_quote, image_url etc.)
+            setPost(script);
+            setView("card");
+        } catch (e: any) {
+            setError(e.message || "Failed to generate post. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    const scoreColor = post?.virality_score >= 85 ? "#10b981" : post?.virality_score >= 70 ? "#f59e0b" : "#ef4444";
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white">
-            {/* Top Nav */}
-            <header className="border-b border-slate-800/60 bg-slate-950/80 backdrop-blur-sm sticky top-0 z-10">
-                <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-                    <h1 className="text-xl font-black tracking-tighter">
-                        CREATOR<span className="text-blue-500">ZERO</span>
-                    </h1>
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className="gap-2 text-slate-400 hover:text-white hover:bg-slate-800"
-                        onClick={handleSignout}
-                    >
-                        <LogOut size={16} /> Sign Out
-                    </Button>
-                </div>
-            </header>
+        <div style={{ minHeight: "100vh", background: "#060608", fontFamily: "'DM Sans', sans-serif", color: "#fff" }}>
+            <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Syne:wght@700;800&family=Space+Mono:ital@0;1&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .gen-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 32px rgba(99,102,241,0.4) !important; }
+        .gen-btn:active { transform: translateY(0); }
+        .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+        .tab-btn { transition: all 0.2s; }
+        .tab-btn:hover { background: rgba(255,255,255,0.06) !important; }
+        select option { background: #1a1a2e; color: #fff; }
+        .input-field:focus { outline: none; border-color: #6366f1 !important; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+        .pulse { animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-up { animation: fadeUp 0.5s ease forwards; }
+        .card-shine { background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.04) 50%, transparent 60%); }
+      `}</style>
 
-            <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-                {/* === LEFT: Input Panel === */}
-                <div className="lg:col-span-5 space-y-5">
+            {/* Header */}
+            <div style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "18px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(6,6,8,0.9)", backdropFilter: "blur(12px)", position: "sticky", top: 0, zIndex: 100 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 32, height: 32, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
                     <div>
-                        <h2 className="text-2xl font-black tracking-tight mb-1">
-                            Script <span className="text-blue-500">Architect</span>
-                        </h2>
-                        <p className="text-slate-400 text-sm">Generate viral posts tailored to your audience and goals.</p>
+                        <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 18, letterSpacing: "-0.5px" }}>
+                            Script <span style={{ color: "#6366f1" }}>Architect</span>
+                        </div>
+                        <div style={{ fontSize: 11, color: "#555", marginTop: 1 }}>AI-Powered Viral Post Generator</div>
+                    </div>
+                </div>
+
+                <button
+                    onClick={handleSignout}
+                    style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#ccc", fontSize: 13, cursor: "pointer", transition: "all 0.2s" }}
+                >
+                    <LogOut size={16} /> Sign out
+                </button>
+            </div>
+
+            <div style={{ display: "flex", minHeight: "calc(100vh - 65px)" }}>
+                {/* Left Panel */}
+                <div style={{ width: 400, minWidth: 400, borderRight: "1px solid rgba(255,255,255,0.06)", padding: 28, display: "flex", flexDirection: "column", gap: 22, overflowY: "auto" }}>
+
+                    {/* Niche */}
+                    <div>
+                        <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: "#666", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                            <span>🎯</span> Target Niche
+                        </label>
+                        <div style={{ position: "relative" }}>
+                            <select
+                                className="input-field"
+                                value={niche}
+                                onChange={e => setNiche(e.target.value)}
+                                style={{ width: "100%", padding: "12px 16px", background: "#0f0f18", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: niche ? "#fff" : "#555", fontSize: 14, appearance: "none", cursor: "pointer", transition: "border-color 0.2s" }}
+                            >
+                                <option value="">Select your niche...</option>
+                                {NICHES.map(n => <option key={n.value} value={n.value}>{n.label}</option>)}
+                            </select>
+                            <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", color: "#555", pointerEvents: "none" }}>▾</span>
+                        </div>
+                        {niche && (
+                            <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                {[colors.primary, colors.secondary, colors.accent].map((c, i) => (
+                                    <div key={i} style={{ width: 20, height: 20, borderRadius: 4, background: c, border: "2px solid rgba(255,255,255,0.1)" }} title={c} />
+                                ))}
+                                <span style={{ fontSize: 11, color: "#555", alignSelf: "center" }}>Niche color palette active</span>
+                            </div>
+                        )}
                     </div>
 
-                    <Card className="bg-slate-900 border-slate-800 shadow-xl">
-                        <CardContent className="p-6 space-y-5">
+                    {/* Topic */}
+                    <div>
+                        <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: "#666", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                            <span>✦</span> Topic / Idea
+                        </label>
+                        <input
+                            className="input-field"
+                            type="text"
+                            placeholder="e.g. How to start vibe coding..."
+                            value={topic}
+                            onChange={e => setTopic(e.target.value)}
+                            style={{ width: "100%", padding: "12px 16px", background: "#0f0f18", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", fontSize: 14, transition: "border-color 0.2s" }}
+                        />
+                    </div>
 
-                            {/* Niche Selector */}
-                            <div className="space-y-2">
-                                <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                    <Target size={12} /> Target Niche
-                                </Label>
-                                <div className="relative">
-                                    <button
-                                        type="button"
-                                        onClick={() => { setNicheOpen(!nicheOpen); setPurposeOpen(false); }}
-                                        className="w-full flex items-center justify-between px-3 h-10 bg-slate-950 border border-slate-800 rounded-md text-sm text-left hover:border-slate-700 focus:outline-none focus:border-blue-500 transition-colors"
-                                    >
-                                        <span>{niche}</span>
-                                        <ChevronDown size={14} className={`text-slate-500 transition-transform ${nicheOpen ? "rotate-180" : ""}`} />
-                                    </button>
-                                    {nicheOpen && (
-                                        <div className="absolute z-20 mt-1 w-full bg-slate-900 border border-slate-800 rounded-md shadow-xl overflow-hidden">
-                                            {NICHES.map((n) => (
-                                                <button
-                                                    key={n}
-                                                    type="button"
-                                                    onClick={() => { setNiche(n); setNicheOpen(false); }}
-                                                    className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-800 transition-colors ${niche === n ? "text-blue-400 bg-slate-800/50" : "text-slate-300"}`}
-                                                >
-                                                    {n}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Topic / Idea */}
-                            <div className="space-y-2">
-                                <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                    <Sparkles size={12} /> Topic / Idea
-                                </Label>
-                                <Input
-                                    placeholder="e.g. How AI is replacing junior developers..."
-                                    value={prompt}
-                                    onChange={(e) => setPrompt(e.target.value)}
-                                    className="bg-slate-950 border-slate-800 focus:border-blue-500 h-10 placeholder:text-slate-600"
-                                />
-                            </div>
-
-                            {/* Post Purpose */}
-                            <div className="space-y-2">
-                                <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                    <Zap size={12} /> Post Goal / Purpose
-                                </Label>
-                                <div className="relative">
-                                    <button
-                                        type="button"
-                                        onClick={() => { setPurposeOpen(!purposeOpen); setNicheOpen(false); }}
-                                        className="w-full flex items-center justify-between px-3 h-10 bg-slate-950 border border-slate-800 rounded-md text-sm text-left hover:border-slate-700 focus:outline-none focus:border-blue-500 transition-colors"
-                                    >
-                                        <span>{purpose}</span>
-                                        <ChevronDown size={14} className={`text-slate-500 transition-transform ${purposeOpen ? "rotate-180" : ""}`} />
-                                    </button>
-                                    {purposeOpen && (
-                                        <div className="absolute z-20 mt-1 w-full bg-slate-900 border border-slate-800 rounded-md shadow-xl overflow-hidden">
-                                            {PURPOSES.map((p) => (
-                                                <button
-                                                    key={p}
-                                                    type="button"
-                                                    onClick={() => { setPurpose(p); setPurposeOpen(false); }}
-                                                    className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-800 transition-colors ${purpose === p ? "text-blue-400 bg-slate-800/50" : "text-slate-300"}`}
-                                                >
-                                                    {p}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Detailed Description */}
-                            <div className="space-y-2">
-                                <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                    <FileText size={12} /> Detailed Description <span className="text-slate-600 normal-case ml-1">(optional)</span>
-                                </Label>
-                                <textarea
-                                    rows={4}
-                                    placeholder="Describe your product, service, or any extra context the AI should know to create a better post..."
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-md px-3 py-2.5 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500 resize-none transition-colors"
-                                />
-                            </div>
-
-                            {generateError && (
-                                <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-md p-3">
-                                    {generateError}
-                                </div>
-                            )}
-
-                            {/* Generate Button */}
-                            <Button
-                                onClick={handleGenerate}
-                                disabled={isGenerating || !prompt.trim()}
-                                className="w-full h-12 bg-blue-600 hover:bg-blue-500 font-bold text-base tracking-wide group disabled:opacity-50 transition-all"
+                    {/* Goal */}
+                    <div>
+                        <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: "#666", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                            <span>⚡</span> Post Goal
+                        </label>
+                        <div style={{ position: "relative" }}>
+                            <select
+                                className="input-field"
+                                value={goal}
+                                onChange={e => setGoal(e.target.value)}
+                                style={{ width: "100%", padding: "12px 16px", background: "#0f0f18", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: goal ? "#fff" : "#555", fontSize: 14, appearance: "none", cursor: "pointer", transition: "border-color 0.2s" }}
                             >
-                                {isGenerating ? (
-                                    <span className="flex items-center gap-2">
-                                        <Loader2 size={18} className="animate-spin" /> Synthesizing with AI...
-                                    </span>
-                                ) : (
-                                    <span className="flex items-center gap-2">
-                                        Generate Post <Send size={18} className="group-hover:translate-x-1 transition-transform" />
-                                    </span>
-                                )}
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* === RIGHT: Output + History === */}
-                <div className="lg:col-span-7 space-y-6">
-
-                    {/* Script Output */}
-                    {currentScript ? (
-                        <div ref={outputRef}>
-                            <Card className="bg-slate-900 border-blue-500/40 border shadow-2xl shadow-blue-500/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                <CardHeader className="border-b border-slate-800 pb-4">
-                                    <div className="flex items-center justify-between">
-                                        <CardTitle className="text-blue-400 flex items-center gap-2">
-                                            <Sparkles size={18} /> Generated Post
-                                        </CardTitle>
-                                        <div className="text-xs text-slate-500">Viral Score</div>
-                                    </div>
-                                    <ScoreBar score={currentScript.viral_score} />
-                                </CardHeader>
-                                <CardContent className="pt-5 space-y-5">
-
-                                    {/* Hook */}
-                                    <div className="space-y-1.5 p-4 bg-slate-950 rounded-lg border border-slate-800 group">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">🪝 Hook</span>
-                                            <CopyButton text={currentScript.hook} />
-                                        </div>
-                                        <p className="text-lg font-semibold leading-snug">{currentScript.hook}</p>
-                                    </div>
-
-                                    {/* Body */}
-                                    <div className="space-y-1.5 p-4 bg-slate-950 rounded-lg border border-slate-800">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">📝 Body</span>
-                                            <CopyButton text={currentScript.body} />
-                                        </div>
-                                        <p className="text-slate-300 text-sm leading-relaxed whitespace-pre-line">{currentScript.body}</p>
-                                    </div>
-
-                                    {/* CTA */}
-                                    <div className="space-y-1.5 p-4 bg-slate-950 rounded-lg border border-slate-800">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-bold text-green-400 uppercase tracking-widest">⚡ Call to Action</span>
-                                            <CopyButton text={currentScript.cta} />
-                                        </div>
-                                        <p className="text-green-300 text-sm font-medium">{currentScript.cta}</p>
-                                    </div>
-
-                                    {/* Caption */}
-                                    <div className="space-y-1.5 p-4 bg-slate-950 rounded-lg border border-slate-800">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">💬 Caption</span>
-                                            <CopyButton text={currentScript.caption} />
-                                        </div>
-                                        <p className="text-slate-400 italic text-sm">"{currentScript.caption}"</p>
-                                    </div>
-
-                                    {/* Hashtags */}
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-1.5">
-                                            <Hash size={12} className="text-slate-500" />
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hashtags</span>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {currentScript.hashtags.map((tag) => (
-                                                <span key={tag} className="px-2 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs rounded-md font-medium">
-                                                    #{tag}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Copy All */}
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="w-full border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800 gap-2"
-                                        onClick={() => {
-                                            navigator.clipboard.writeText(
-                                                `${currentScript.hook}\n\n${currentScript.body}\n\n${currentScript.cta}\n\n${currentScript.caption}\n\n${currentScript.hashtags.map(h => `#${h}`).join(' ')}`
-                                            );
-                                        }}
-                                    >
-                                        <Copy size={14} /> Copy Full Post
-                                    </Button>
-                                </CardContent>
-                            </Card>
+                                <option value="">Select goal...</option>
+                                {GOALS.map(g => <option key={g} value={g}>{g}</option>)}
+                            </select>
+                            <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", color: "#555", pointerEvents: "none" }}>▾</span>
                         </div>
-                    ) : (
-                        <div className="hidden lg:flex flex-col items-center justify-center h-64 border border-dashed border-slate-800 rounded-xl text-slate-600">
-                            <Sparkles size={40} className="mb-3 opacity-30" />
-                            <p className="text-sm">Your generated post will appear here</p>
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                        <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: "#666", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                            <span>📄</span> Details <span style={{ color: "#333", fontWeight: 400, textTransform: "none", letterSpacing: 0, fontSize: 10 }}>(optional)</span>
+                        </label>
+                        <textarea
+                            className="input-field"
+                            placeholder="Add any product info, audience details, key messages, or context the AI should know..."
+                            value={description}
+                            onChange={e => setDescription(e.target.value)}
+                            rows={4}
+                            style={{ width: "100%", padding: "12px 16px", background: "#0f0f18", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", fontSize: 13, resize: "vertical", lineHeight: 1.6, transition: "border-color 0.2s" }}
+                        />
+                    </div>
+
+                    {error && (
+                        <div style={{ padding: "10px 14px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, color: "#fca5a5", fontSize: 13 }}>
+                            {error}
                         </div>
                     )}
 
-                    {/* History */}
-                    <Card className="bg-slate-900 border-slate-800">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-base flex items-center gap-2 text-slate-300">
-                                <History className="text-slate-500" size={16} /> Recent History
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {isHistoryLoading ? (
-                                <div className="flex justify-center py-8">
-                                    <Loader2 className="animate-spin text-slate-600" />
-                                </div>
-                            ) : history.length === 0 ? (
-                                <p className="text-center text-slate-600 text-sm py-8">
-                                    No scripts generated yet. Create your first one!
-                                </p>
-                            ) : (
-                                <div className="space-y-2">
-                                    {history.slice(0, 8).map((script) => (
-                                        <div
-                                            key={script.id}
-                                            className={`p-3 bg-slate-950 rounded-lg border cursor-pointer transition-all hover:border-slate-700 ${currentScript?.id === script.id ? "border-blue-500/50" : "border-slate-800"}`}
-                                            onClick={() => setCurrentScript(script)}
-                                        >
-                                            <p className="text-sm font-medium truncate text-slate-200">{script.hook}</p>
-                                            <div className="flex justify-between items-center mt-1.5">
-                                                <span className="text-[10px] text-slate-600">{new Date(script.created_at).toLocaleDateString()}</span>
-                                                <span className={`text-[10px] font-bold ${script.viral_score >= 80 ? "text-green-400" : script.viral_score >= 60 ? "text-yellow-400" : "text-red-400"}`}>
-                                                    {script.viral_score}/100
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
+                    <button
+                        className="gen-btn"
+                        onClick={generatePost}
+                        disabled={loading}
+                        style={{ padding: "15px 24px", background: loading ? "#333" : "linear-gradient(135deg, #6366f1, #8b5cf6)", border: "none", borderRadius: 12, color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, transition: "all 0.2s", marginTop: 4, fontFamily: "'Syne', sans-serif", letterSpacing: 0.5 }}
+                    >
+                        {loading ? (
+                            <><span className="pulse">⚡</span> Crafting your post...</>
+                        ) : (
+                            <><span>⚡</span> Generate Post</>
+                        )}
+                    </button>
+
+                    {post && (
+                        <div style={{ padding: "12px 16px", background: "rgba(255,255,255,0.03)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.06)", fontSize: 12, color: "#666", lineHeight: 1.7 }}>
+                            <div style={{ color: "#999", fontWeight: 600, marginBottom: 6 }}>💡 Pro Tips</div>
+                            <div>• Post between 7-9am or 6-8pm for max reach</div>
+                            <div>• Reply to every comment in the first hour</div>
+                            <div>• Add to Stories within 30 min of posting</div>
+                        </div>
+                    )}
                 </div>
 
+                {/* Right Panel */}
+                <div style={{ flex: 1, padding: 32, display: "flex", flexDirection: "column", gap: 20, background: "#07070d" }}>
+                    {/* Tabs */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", background: "#0f0f18", borderRadius: 10, padding: 4, gap: 2 }}>
+                            {["card", "text"].map(t => (
+                                <button
+                                    key={t}
+                                    className="tab-btn"
+                                    onClick={() => setView(t)}
+                                    style={{ padding: "8px 20px", borderRadius: 7, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, background: view === t ? "#1a1a2e" : "transparent", color: view === t ? "#fff" : "#666", transition: "all 0.2s" }}
+                                >
+                                    {t === "card" ? "🖼 Image Format" : "📝 Text View"}
+                                </button>
+                            ))}
+                        </div>
+                        <div style={{ fontSize: 12, color: "#444" }}>Ready-to-share social media post</div>
+                    </div>
+
+                    {/* Card / Text Preview */}
+                    <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center" }}>
+                        {!post && !loading && (
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, height: 400, color: "#333", textAlign: "center" }}>
+                                <div style={{ fontSize: 48 }}>⚡</div>
+                                <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 20, color: "#444" }}>Your post will appear here</div>
+                                <div style={{ fontSize: 14, color: "#333", maxWidth: 300 }}>Fill in the details on the left and hit Generate Post to create your viral content</div>
+                            </div>
+                        )}
+
+                        {loading && (
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, height: 400, color: "#555" }}>
+                                <div style={{ width: 480, height: 480, borderRadius: 24, background: "#0f0f18", border: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+                                    <div className="pulse" style={{ fontSize: 40 }}>⚡</div>
+                                    <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, color: "#555" }}>Generating viral content & image...</div>
+                                    <div style={{ width: 200, height: 3, background: "#1a1a2e", borderRadius: 2, overflow: "hidden" }}>
+                                        <div className="pulse" style={{ width: "60%", height: "100%", background: "linear-gradient(90deg, #6366f1, #8b5cf6)", borderRadius: 2 }} />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Generated Image View (From Gemini Imagen API) */}
+                        {post && view === "card" && post.image_url && (
+                            <div className="fade-up" style={{ width: '100%', maxWidth: 540, display: "flex", flexDirection: "column", gap: 16 }}>
+                                <div style={{ width: '100%', aspectRatio: '1/1', borderRadius: 24, overflow: "hidden", background: "#0a0a0f", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                                    <img src={post.image_url} alt="Generated post image" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                    <a href={post.image_url} download="social_post.png" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: "12px 24px", background: "rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff", textDecoration: "none", fontSize: 14, fontWeight: 600, border: "1px solid rgba(255,255,255,0.1)", transition: "all 0.2s" }} className="tab-btn">
+                                        ⬇️ Download Image
+                                    </a>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Fallback CSS Card (if image generation fails or is not enabled) */}
+                        {post && view === "card" && !post.image_url && (
+                            <div className="fade-up" ref={cardRef} style={{ width: 480, borderRadius: 24, overflow: "hidden", background: colors.bg, boxShadow: `0 0 60px ${colors.primary}30, 0 40px 80px rgba(0,0,0,0.6)`, border: `1px solid ${colors.primary}30`, position: "relative" }}>
+                                {/* Decorative orb */}
+                                <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: `radial-gradient(circle, ${colors.primary}30, transparent 70%)`, pointerEvents: "none" }} />
+                                <div style={{ position: "absolute", bottom: -40, left: -40, width: 160, height: 160, borderRadius: "50%", background: `radial-gradient(circle, ${colors.secondary}20, transparent 70%)`, pointerEvents: "none" }} />
+
+                                <div style={{ padding: 32, position: "relative" }}>
+                                    {/* Top row */}
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                                        <div style={{ padding: "6px 14px", background: `${colors.tag}cc`, borderRadius: 20, fontSize: 11, fontWeight: 700, letterSpacing: 1.5, color: colors.accent, border: `1px solid ${colors.primary}40`, textTransform: "uppercase" }}>
+                                            {selectedNiche?.label || post.niche_label || niche}
+                                        </div>
+                                        <div style={{ padding: "6px 14px", background: `${colors.primary}25`, borderRadius: 20, fontSize: 12, fontWeight: 700, color: scoreColor, border: `1px solid ${scoreColor}50`, display: "flex", alignItems: "center", gap: 5 }}>
+                                            ⚡ {post.virality_score || post.viral_score || 85}/100
+                                        </div>
+                                    </div>
+
+                                    {/* Headline */}
+                                    <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: 28, fontWeight: 800, lineHeight: 1.2, color: "#fff", marginBottom: 10, letterSpacing: "-0.5px" }}>
+                                        {post.headline}
+                                    </h2>
+
+                                    {/* Subtext */}
+                                    {post.subtext && (
+                                        <p style={{ fontSize: 14, color: colors.accent, lineHeight: 1.6, marginBottom: 20, opacity: 0.9 }}>
+                                            {post.subtext}
+                                        </p>
+                                    )}
+
+                                    {/* Hook quote */}
+                                    {post.hook_quote && (
+                                        <div style={{ padding: "14px 18px", background: "rgba(255,255,255,0.05)", borderRadius: 12, borderLeft: `3px solid ${colors.primary}`, marginBottom: 20 }}>
+                                            <p style={{ fontFamily: "'Space Mono', monospace", fontSize: 13, color: "#ccc", fontStyle: "italic", lineHeight: 1.6 }}>
+                                                "{post.hook_quote}"
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Key Points */}
+                                    {post.key_points && post.key_points.length > 0 && (
+                                        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 22, padding: 18, background: "rgba(255,255,255,0.04)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.06)" }}>
+                                            {post.key_points.map((pt: string, i: number) => (
+                                                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                                                    <div style={{ width: 24, height: 24, minWidth: 24, borderRadius: "50%", background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#fff", marginTop: 1 }}>
+                                                        {i + 1}
+                                                    </div>
+                                                    <span style={{ fontSize: 13, color: "#ddd", lineHeight: 1.6 }}>{pt}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* CTA */}
+                                    <div style={{ padding: "16px 20px", background: `linear-gradient(135deg, ${colors.primary}ee, ${colors.secondary}ee)`, borderRadius: 14, marginBottom: 20, textAlign: "center" }}>
+                                        <p style={{ fontFamily: "'Syne', sans-serif", fontSize: 14, fontWeight: 700, color: "#fff", letterSpacing: 0.3, lineHeight: 1.5 }}>
+                                            {post.cta}
+                                        </p>
+                                    </div>
+
+                                    {/* Footer line */}
+                                    {post.footer_line && (
+                                        <p style={{ fontSize: 12, color: "#666", marginBottom: 16, textAlign: "center" }}>
+                                            {post.footer_line}
+                                        </p>
+                                    )}
+
+                                    {/* Hashtags */}
+                                    {post.hashtags && (
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 20 }}>
+                                            {post.hashtags.map((tag: string, i: number) => (
+                                                <span key={i} style={{ fontSize: 11, color: colors.secondary, opacity: 0.8 }}>#{tag}</span>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Bottom brand */}
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                                        <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 13, letterSpacing: 1 }}>
+                                            SCRIPT<span style={{ color: colors.primary }}>ARCHITECT</span>
+                                        </div>
+                                        <div style={{ fontSize: 11, color: "#444" }}>AI Generated · Ready to Share</div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Text View */}
+                        {post && view === "text" && (
+                            <div className="fade-up" style={{ width: "100%", maxWidth: 640, display: "flex", flexDirection: "column", gap: 16 }}>
+                                {[
+                                    { label: "Headline", content: post.headline, mono: false },
+                                    { label: "Subtext", content: post.subtext, mono: false },
+                                    { label: "Hook / Quote", content: post.hook_quote ? `"${post.hook_quote}"` : "", mono: true },
+                                    { label: "Key Points", content: post.key_points?.map((p: string, i: number) => `${i + 1}. ${p}`).join("\n"), mono: false },
+                                    { label: "Call to Action", content: post.cta, mono: false },
+                                    { label: "Footer", content: post.footer_line, mono: false },
+                                    { label: "Hashtags", content: post.hashtags?.map((t: string) => `#${t}`).join(" "), mono: true },
+                                ].filter(item => item.content).map(({ label, content, mono }) => (
+                                    <div key={label} style={{ background: "#0f0f18", borderRadius: 12, padding: "16px 20px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                                        <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, color: "#555", textTransform: "uppercase", marginBottom: 8 }}>{label}</div>
+                                        <div style={{ fontSize: 14, color: "#ccc", lineHeight: 1.7, fontFamily: mono ? "'Space Mono', monospace" : "inherit", whiteSpace: "pre-line" }}>
+                                            {content}
+                                        </div>
+                                    </div>
+                                ))}
+                                <button
+                                    onClick={() => {
+                                        const text = `${post.headline}\n\n${post.subtext}\n\n"${post.hook_quote}"\n\n${post.key_points?.map((p: string, i: number) => `${i + 1}. ${p}`).join("\n")}\n\n${post.cta}\n\n${post.footer_line}\n\n${post.hashtags?.map((t: string) => `#${t}`).join(" ")}`;
+                                        navigator.clipboard.writeText(text);
+                                    }}
+                                    style={{ padding: "12px 24px", background: "rgba(99,102,241,0.2)", border: "1px solid rgba(99,102,241,0.4)", borderRadius: 10, color: "#a78bfa", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                                    className="tab-btn"
+                                >
+                                    📋 Copy All Text
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );

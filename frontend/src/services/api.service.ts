@@ -17,6 +17,7 @@ export interface GenerateScriptRequest {
     prompt: string;
     niche: string;
     purpose?: string;
+    description?: string;
 }
 
 
