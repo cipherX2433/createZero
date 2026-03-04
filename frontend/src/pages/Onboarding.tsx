@@ -4,18 +4,49 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function Onboarding() {
     const [step, setStep] = useState(1);
     const [niche, setNiche] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleNext = () => {
+    const handleNext = async () => {
+        console.log("handleNext triggered", { step, niche });
         if (step < 2) {
             setStep(step + 1);
         } else {
-            navigate("/dashboard");
+            setIsLoading(true);
+            try {
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                if (userError) throw userError;
+
+                if (user) {
+                    console.log("Saving profile for user:", user.id);
+                    const { error } = await supabase
+                        .from('profiles')
+                        .update({ niche })
+                        .eq('id', user.id);
+
+                    if (error) {
+                        console.error("Profile update error:", error);
+                        // We proceed to dashboard anyway so the user isn't stuck
+                    }
+                } else {
+                    console.warn("No user found in session during onboarding");
+                }
+
+                console.log("Navigating to dashboard...");
+                navigate("/dashboard");
+            } catch (err) {
+                console.error("Onboarding handleNext failed:", err);
+                // Fallback navigation
+                navigate("/dashboard");
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -71,10 +102,16 @@ export default function Onboarding() {
                     <Button
                         className="w-full bg-white text-black hover:bg-slate-200 font-bold h-12 flex items-center justify-center gap-2 group"
                         onClick={handleNext}
-                        disabled={!niche && step === 1}
+                        disabled={(!niche && step === 1) || isLoading}
                     >
-                        {step === 1 ? "Next Phase" : "Enter Dashboard"}
-                        <ArrowRight className="group-hover:translate-x-1 transition-transform" size={18} />
+                        {isLoading ? (
+                            <Loader2 className="animate-spin" size={18} />
+                        ) : (
+                            <>
+                                {step === 1 ? "Next Phase" : "Enter Dashboard"}
+                                <ArrowRight className="group-hover:translate-x-1 transition-transform" size={18} />
+                            </>
+                        )}
                     </Button>
                 </CardFooter>
             </Card>

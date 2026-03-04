@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { apiService } from "@/services/api.service";
 
 export default function Signup() {
     const [email, setEmail] = useState("");
@@ -21,27 +22,27 @@ export default function Signup() {
         setError(null);
         setSuccess(false);
 
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                emailRedirectTo: `${window.location.origin}/auth/callback`,
-            },
-        });
+        try {
+            const data = await apiService.signup({ email, password });
 
-        if (error) {
-            if (error.message.includes("rate limit")) {
+            if (data.session) {
+                await supabase.auth.setSession({
+                    access_token: data.session.access_token,
+                    refresh_token: data.session.refresh_token,
+                });
+                navigate("/onboarding");
+            } else if (data.user && !data.session) {
+                // Email confirmation might be required depending on Supabase settings
+                setSuccess(true);
+                setIsLoading(false);
+            }
+        } catch (err: any) {
+            if (err.message.includes("rate limit")) {
                 setError("Email rate limit exceeded. Please try again later or disable 'Confirm email' in your Supabase project settings.");
             } else {
-                setError(error.message);
+                setError(err.message);
             }
             setIsLoading(false);
-        } else if (data.user && !data.session) {
-            // Email confirmation is required
-            setSuccess(true);
-            setIsLoading(false);
-        } else if (data.session) {
-            navigate("/onboarding");
         }
     };
 

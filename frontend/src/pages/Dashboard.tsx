@@ -3,27 +3,39 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles, History, TrendingUp, Send } from "lucide-react";
+import { Sparkles, History, TrendingUp, Send, Loader2, LogOut } from "lucide-react";
 import { apiService, Script } from "@/services/api.service";
+import { supabase } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
     const [prompt, setPrompt] = useState("");
     const [niche, setNiche] = useState("Tech/SaaS");
     const [isGenerating, setIsGenerating] = useState(false);
     const [history, setHistory] = useState<Script[]>([]);
+    const [isHistoryLoading, setIsHistoryLoading] = useState(false);
     const [currentScript, setCurrentScript] = useState<Script | null>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         loadHistory();
     }, []);
 
     const loadHistory = async () => {
+        setIsHistoryLoading(true);
         try {
             const data = await apiService.fetchScripts();
             setHistory(data);
         } catch (err) {
             console.error("Failed to load history", err);
+        } finally {
+            setIsHistoryLoading(false);
         }
+    };
+
+    const handleSignout = async () => {
+        await supabase.auth.signOut();
+        navigate("/login");
     };
 
     const handleGenerate = async () => {
@@ -55,6 +67,13 @@ export default function Dashboard() {
                         </Button>
                         <Button className="gap-2 bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/20">
                             <TrendingUp size={18} /> Trends
+                        </Button>
+                        <Button
+                            variant="outline"
+                            className="gap-2 border-slate-800 text-slate-400 hover:text-white hover:bg-red-950/30 hover:border-red-500/50 transition-colors"
+                            onClick={handleSignout}
+                        >
+                            <LogOut size={18} /> Signout
                         </Button>
                     </div>
                 </header>
@@ -145,21 +164,26 @@ export default function Dashboard() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {history.slice(0, 5).map((script) => (
-                                    <div
-                                        key={script.id}
-                                        className="p-3 bg-slate-950 rounded-lg border border-slate-800 hover:border-slate-700 cursor-pointer transition-colors"
-                                        onClick={() => setCurrentScript(script)}
-                                    >
-                                        <p className="text-sm font-medium truncate">{script.hook}</p>
-                                        <div className="flex justify-between items-center mt-2">
-                                            <span className="text-[10px] text-slate-500">{new Date(script.created_at).toLocaleDateString()}</span>
-                                            <span className="text-[10px] font-bold text-green-500">{script.viral_score}/100</span>
-                                        </div>
+                                {isHistoryLoading ? (
+                                    <div className="flex justify-center py-8">
+                                        <Loader2 className="animate-spin text-slate-500" />
                                     </div>
-                                ))}
-                                {history.length === 0 && (
+                                ) : history.length === 0 ? (
                                     <p className="text-center text-slate-500 text-sm py-8">No generation history yet.</p>
+                                ) : (
+                                    history.slice(0, 5).map((script) => (
+                                        <div
+                                            key={script.id}
+                                            className="p-3 bg-slate-950 rounded-lg border border-slate-800 hover:border-slate-700 cursor-pointer transition-colors"
+                                            onClick={() => setCurrentScript(script)}
+                                        >
+                                            <p className="text-sm font-medium truncate">{script.hook}</p>
+                                            <div className="flex justify-between items-center mt-2">
+                                                <span className="text-[10px] text-slate-500">{new Date(script.created_at).toLocaleDateString()}</span>
+                                                <span className="text-[10px] font-bold text-green-500">{script.viral_score}/100</span>
+                                            </div>
+                                        </div>
+                                    ))
                                 )}
                             </CardContent>
                         </Card>

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { apiService } from "@/services/api.service";
 
 export default function Login() {
     const [email, setEmail] = useState("");
@@ -19,20 +20,23 @@ export default function Login() {
         setIsLoading(true);
         setError(null);
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        try {
+            const data = await apiService.login({ email, password });
 
-        if (error) {
-            if (error.message.includes("rate limit")) {
+            if (data.session) {
+                await supabase.auth.setSession({
+                    access_token: data.session.access_token,
+                    refresh_token: data.session.refresh_token,
+                });
+                navigate("/dashboard");
+            }
+        } catch (err: any) {
+            if (err.message.includes("rate limit")) {
                 setError("Email rate limit exceeded. Please try again later or check your Supabase Auth settings.");
             } else {
-                setError(error.message);
+                setError(err.message);
             }
             setIsLoading(false);
-        } else {
-            navigate("/dashboard");
         }
     };
 

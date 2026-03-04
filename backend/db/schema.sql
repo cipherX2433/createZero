@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
+    password_hash TEXT, -- Added for custom manual verification if needed
     role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin')),
     niche TEXT,
     goals TEXT[],
@@ -82,8 +83,12 @@ CREATE POLICY "Users can view own logs" ON public.usage_logs
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO public.profiles (id, email)
-    VALUES (new.id, new.email);
+    INSERT INTO public.profiles (id, email, password_hash)
+    VALUES (
+        new.id, 
+        new.email, 
+        (new.raw_user_meta_data->>'password_hash')
+    );
     RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
