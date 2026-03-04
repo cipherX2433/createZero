@@ -7,6 +7,10 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
     fastify.post('/signup', authController.signup);
     fastify.post('/login', authController.login);
 
+    // Profile Endpoints
+    fastify.get('/profile', { preHandler: [authMiddleware] }, authController.getProfile);
+    fastify.put('/profile', { preHandler: [authMiddleware] }, authController.updateProfile);
+
     // Simple check endpoint to verify token
     fastify.get('/me', { preHandler: [authMiddleware] }, async (request, reply) => {
         return {
@@ -17,3 +21,4 @@ export default async function authRoutes(fastify: FastifyInstance, options: Fast
         };
     });
 }
+

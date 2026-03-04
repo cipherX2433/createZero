@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { supabase } from '../db/supabase';
+import { verifyToken } from '../utils/jwt';
 
 export const authMiddleware = async (request: FastifyRequest, reply: FastifyReply) => {
     const authHeader = request.headers.authorization;
@@ -11,16 +11,24 @@ export const authMiddleware = async (request: FastifyRequest, reply: FastifyRepl
         });
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data, error } = await supabase.auth.getUser(token);
+    try {
+        const token = authHeader.replace('Bearer ', '');
+        const decoded: any = verifyToken(token);
 
-    if (error || !data.user) {
+        if (!decoded || !decoded.sub) {
+            throw new Error('Invalid token');
+        }
+
+        // Attach user info to request context
+        (request as any).user = {
+            id: decoded.sub,
+            email: decoded.email,
+        };
+    } catch (err) {
         return reply.status(401).send({
             success: false,
             error: 'Invalid or expired token',
         });
     }
-
-    // Attach user to request context
-    (request as any).user = data.user;
 };
+

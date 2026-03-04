@@ -7,27 +7,28 @@ import Onboarding from './pages/Onboarding';
 import AuthCallback from './pages/AuthCallback';
 import { useEffect, useState } from 'react';
 
-import { supabase } from './lib/supabase';
-import { Session } from '@supabase/supabase-js';
-
 function App() {
-    const [session, setSession] = useState<Session | null>(null);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
+        const checkAuth = () => {
+            const token = localStorage.getItem('auth_token');
+            setIsAuthenticated(!!token);
             setLoading(false);
-        });
+        };
 
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-        });
+        checkAuth();
 
-        return () => subscription.unsubscribe();
+        // 'storage' fires for cross-tab changes; 'auth-change' fires for same-tab changes
+        window.addEventListener('storage', checkAuth);
+        window.addEventListener('auth-change', checkAuth);
+        return () => {
+            window.removeEventListener('storage', checkAuth);
+            window.removeEventListener('auth-change', checkAuth);
+        };
     }, []);
+
 
     if (loading) {
         return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Loading...</div>;
@@ -39,19 +40,19 @@ function App() {
                 <Route path="/" element={<LandingPage />} />
                 <Route
                     path="/login"
-                    element={session ? <Navigate to="/dashboard" /> : <Login />}
+                    element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />}
                 />
                 <Route
                     path="/signup"
-                    element={session ? <Navigate to="/dashboard" /> : <Signup />}
+                    element={isAuthenticated ? <Navigate to="/dashboard" /> : <Signup />}
                 />
                 <Route
                     path="/dashboard"
-                    element={session ? <Dashboard /> : <Navigate to="/login" />}
+                    element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
                 />
                 <Route
                     path="/onboarding"
-                    element={session ? <Onboarding /> : <Navigate to="/login" />}
+                    element={isAuthenticated ? <Onboarding /> : <Navigate to="/login" />}
                 />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="*" element={<Navigate to="/" />} />
@@ -61,3 +62,4 @@ function App() {
 }
 
 export default App;
+

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, ArrowRight, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { apiService } from "@/services/api.service";
 
 export default function Onboarding() {
     const [step, setStep] = useState(1);
@@ -14,35 +14,16 @@ export default function Onboarding() {
     const navigate = useNavigate();
 
     const handleNext = async () => {
-        console.log("handleNext triggered", { step, niche });
         if (step < 2) {
             setStep(step + 1);
         } else {
             setIsLoading(true);
             try {
-                const { data: { user }, error: userError } = await supabase.auth.getUser();
-                if (userError) throw userError;
-
-                if (user) {
-                    console.log("Saving profile for user:", user.id);
-                    const { error } = await supabase
-                        .from('profiles')
-                        .update({ niche })
-                        .eq('id', user.id);
-
-                    if (error) {
-                        console.error("Profile update error:", error);
-                        // We proceed to dashboard anyway so the user isn't stuck
-                    }
-                } else {
-                    console.warn("No user found in session during onboarding");
-                }
-
-                console.log("Navigating to dashboard...");
+                // Update profile via our custom backend
+                await apiService.updateProfile({ niche });
                 navigate("/dashboard");
             } catch (err) {
-                console.error("Onboarding handleNext failed:", err);
-                // Fallback navigation
+                console.error("Onboarding failed:", err);
                 navigate("/dashboard");
             } finally {
                 setIsLoading(false);
@@ -118,3 +99,4 @@ export default function Onboarding() {
         </div>
     );
 }
+

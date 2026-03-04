@@ -4,18 +4,20 @@ import { supabase } from '../db/supabase';
 import { z } from 'zod';
 
 const generateScriptSchema = z.object({
-    prompt: z.string().min(10),
-    niche: z.string(),
+    prompt: z.string().min(3),
+    niche: z.string().min(1),
+    purpose: z.string().optional().default(''),
 });
 
 export const scriptController = {
     generate: async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            const { prompt, niche } = generateScriptSchema.parse(request.body);
+            const { prompt, niche, purpose } = generateScriptSchema.parse(request.body);
             const user = (request as any).user;
 
             // 1. Generate Script using AI Service
-            const script = await aiService.generateViralScript(prompt, niche);
+            const script = await aiService.generateViralScript(prompt, niche, purpose);
+
 
             // 2. Save to Database
             const { data, error } = await supabase

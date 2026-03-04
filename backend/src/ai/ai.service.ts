@@ -19,24 +19,37 @@ export class AIService {
         this.apiKey = process.env.GEMINI_API_KEY || '';
     }
 
-    async generateViralScript(prompt: string, niche: string): Promise<ScriptResponse> {
-        if (!this.apiKey || this.apiKey === 'your_gemini_api_key') {
+    async generateViralScript(prompt: string, niche: string, purpose: string = ''): Promise<ScriptResponse> {
+        if (!this.apiKey || this.apiKey === 'your_gemini_api_key_here' || this.apiKey === 'your_gemini_api_key') {
             console.warn("GEMINI_API_KEY missing, using mock response");
-            return this.getMockResponse(niche, prompt);
+            return this.getMockResponse(niche, prompt, purpose);
         }
 
         try {
-            const systemPrompt = `You are a viral content architect for ${niche}. 
-      Generate a viral short-form video script based on this idea: "${prompt}".
-      Output must be strictly valid JSON according to this schema:
-      {
-        "hook": "scroll-stopping first sentence",
-        "body": "engaging value-packed middle",
-        "cta": "strong call to action",
-        "caption": "short engaging caption",
-        "hashtags": ["relevant", "tags"],
-        "viral_score": 0-100
-      }`;
+            const purposeContext = purpose ? `\nPost Purpose/Goal: "${purpose}"` : '';
+
+            const systemPrompt = `You are an elite viral content strategist specializing in short-form social media content for the ${niche} niche.
+
+Your task:
+- Topic/Idea: "${prompt}"${purposeContext}
+
+Create a scroll-stopping viral post script. Rules:
+1. Hook must create INSTANT pattern interrupt — no generic openers
+2. Body must deliver real value in short, punchy sentences
+3. CTA must be specific and action-oriented
+4. Caption must be concise and magnetic
+5. Hashtags must be targeted, not just popular
+6. Viral score: honest assessment (70-95 for great content)
+
+Output ONLY valid JSON, no markdown:
+{
+  "hook": "scroll-stopping first sentence that creates curiosity or controversy",
+  "body": "value-packed middle section with specific insights",
+  "cta": "specific call-to-action",
+  "caption": "short punchy caption (under 100 chars)",
+  "hashtags": ["relevant", "targeted", "tags"],
+  "viral_score": 0-100
+}`;
 
             const response = await fetch(`${this.apiEndpoint}?key=${this.apiKey}`, {
                 method: 'POST',
@@ -54,20 +67,22 @@ export class AIService {
             return scriptResponseSchema.parse(JSON.parse(text));
         } catch (err) {
             console.error("AI Generation failed, falling back to mock", err);
-            return this.getMockResponse(niche, prompt);
+            return this.getMockResponse(niche, prompt, purpose);
         }
     }
 
-    private getMockResponse(niche: string, prompt: string): ScriptResponse {
+    private getMockResponse(niche: string, prompt: string, purpose: string): ScriptResponse {
+        const purposeHint = purpose ? ` (Goal: ${purpose})` : '';
         return {
-            hook: `STOP scrolling if you want to dominate the ${niche} space! 🚀`,
-            body: `Most people fail at ${prompt} because they focus on the wrong things. Here's exactly how the top 1% do it differently.`,
-            cta: "Follow for more elite growth strategies! 👇",
-            caption: `Unlocking the secrets of ${niche}. #growth #strategy #creator`,
-            hashtags: ["viral", niche.toLowerCase().replace(/\s+/g, ''), "growth"],
+            hook: `The #1 mistake 97% of ${niche} creators make${purposeHint}...`,
+            body: `Here's what separates the top 1% when it comes to "${prompt}": They obsess over outcomes, not activities. Here are 3 specific things they do differently that no one is talking about.`,
+            cta: `Save this before it disappears. Follow for daily ${niche} breakdowns. 👇`,
+            caption: `Most ${niche} advice is wrong. Here's the truth. 🔥`,
+            hashtags: ["viral", niche.toLowerCase().replace(/\s+/g, ''), "growth", "content", "strategy"],
             viral_score: 88
         };
     }
 }
 
 export const aiService = new AIService();
+

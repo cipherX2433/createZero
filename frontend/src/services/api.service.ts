@@ -1,4 +1,5 @@
-import { supabase } from '@/lib/supabase';
+// import { supabase } from '@/lib/supabase';
+
 
 export interface Script {
     id: string;
@@ -15,13 +16,15 @@ export interface Script {
 export interface GenerateScriptRequest {
     prompt: string;
     niche: string;
+    purpose?: string;
 }
+
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
 
 async function getAuthHeader(): Promise<Record<string, string>> {
-    const { data: { session } } = await supabase.auth.getSession();
-    return session ? { 'Authorization': `Bearer ${session.access_token}` } : {};
+    const token = localStorage.getItem('auth_token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
 }
 
 export const apiService = {
@@ -60,6 +63,12 @@ export const apiService = {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Signup failed');
+
+        if (result.success && result.data.token) {
+            localStorage.setItem('auth_token', result.data.token);
+            window.dispatchEvent(new Event('auth-change'));
+        }
+
         return result.data;
     },
 
@@ -71,6 +80,33 @@ export const apiService = {
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || 'Login failed');
+
+        if (result.success && result.data.token) {
+            localStorage.setItem('auth_token', result.data.token);
+            window.dispatchEvent(new Event('auth-change'));
+        }
+
         return result.data;
     },
+
+    async updateProfile(data: any): Promise<any> {
+        const authHeader = await getAuthHeader();
+        const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...authHeader,
+            },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to update profile');
+        const result = await response.json();
+        return result.data;
+    },
+
+    logout() {
+        localStorage.removeItem('auth_token');
+    }
 };
+
+

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,39 +8,23 @@ import { Loader2 } from "lucide-react";
 import { apiService } from "@/services/api.service";
 
 export default function Signup() {
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState(false);
     const navigate = useNavigate();
 
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setError(null);
-        setSuccess(false);
 
         try {
-            const data = await apiService.signup({ email, password });
-
-            if (data.session) {
-                await supabase.auth.setSession({
-                    access_token: data.session.access_token,
-                    refresh_token: data.session.refresh_token,
-                });
-                navigate("/onboarding");
-            } else if (data.user && !data.session) {
-                // Email confirmation might be required depending on Supabase settings
-                setSuccess(true);
-                setIsLoading(false);
-            }
+            await apiService.signup({ name, email, password });
+            navigate("/onboarding");
         } catch (err: any) {
-            if (err.message.includes("rate limit")) {
-                setError("Email rate limit exceeded. Please try again later or disable 'Confirm email' in your Supabase project settings.");
-            } else {
-                setError(err.message);
-            }
+            setError(err.message);
             setIsLoading(false);
         }
     };
@@ -64,11 +47,18 @@ export default function Signup() {
                                 {error}
                             </div>
                         )}
-                        {success && (
-                            <div className="bg-green-500/10 border border-green-500/50 text-green-500 p-3 rounded-md text-sm">
-                                Authentication sequence initiated. Please verify your email to proceed.
-                            </div>
-                        )}
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Name</Label>
+                            <Input
+                                id="name"
+                                type="text"
+                                placeholder="Architect Name"
+                                className="bg-slate-950 border-slate-800 focus:border-blue-500"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required
+                            />
+                        </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <Input
@@ -113,3 +103,4 @@ export default function Signup() {
         </div>
     );
 }
+

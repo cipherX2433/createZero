@@ -1,88 +1,141 @@
-import bcrypt from 'bcryptjs';
-import { supabase } from '../db/supabase';
-import { createClient } from '@supabase/supabase-js';
+import bcrypt from "bcryptjs";
+import { supabase } from "../db/supabase";
+import { generateToken } from "../utils/jwt";
 
 export const authService = {
-    async hashPassword(password: string): Promise<string> {
-        return await bcrypt.hash(password, 10);
-    },
 
-    async verifyPassword(password: string, hash: string): Promise<boolean> {
-        return await bcrypt.compare(password, hash);
-    },
+  async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, 10);
+  },
 
-    async signup(email: string, password: string) {
-        console.log('Starting custom signup for:', email);
+  async verifyPassword(password: string, hash: string): Promise<boolean> {
+    return bcrypt.compare(password, hash);
+  },
 
-        // 1. Hash password FIRST for atomic storage via metadata
-        const passwordHash = await this.hashPassword(password);
+  async signup(email: string, password: string, name?: string) {
+    console.log("Starting signup for:", email);
 
-        // 2. Sign up to Supabase Auth with metadata
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    password_hash: passwordHash
-                }
-            }
-        });
+    // check if user already exists
+    const { data: existingUser } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
 
-        if (error) {
-            console.error('Supabase Auth signUp error:', error);
-            throw error;
-        }
-
-        if (!data.user) throw new Error('Failed to create user');
-        console.log('User created successfully:', data.user.id);
-
-        return data;
-    },
-
-    async login(email: string, password: string) {
-        console.log('Attempting custom login for:', email);
-
-        // 1. Fetch user profile to get hash (Bypasses RLS if SERVICE_ROLE_KEY is in use)
-        const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('id, email, password_hash')
-            .eq('email', email)
-            .maybeSingle();
-
-        if (profileError) {
-            console.error('Database lookup error during login:', profileError);
-            throw new Error('Internal server error during authentication');
-        }
-
-        if (!profile) {
-            console.warn('User not found in profiles table for email:', email);
-            throw new Error('User not found');
-        }
-
-        if (!profile.password_hash) {
-            console.warn('User found but has no password hash:', email);
-            throw new Error('Account requires password setup or migration');
-        }
-
-        // 2. Manual comparison
-        const isValid = await this.verifyPassword(password, profile.password_hash);
-        if (!isValid) {
-            console.warn('Invalid password attempt for:', email);
-            throw new Error('Invalid credentials');
-        }
-
-        // 3. Sign in to Supabase to get session
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
-
-        if (error) {
-            console.error('Supabase Auth signIn error:', error);
-            throw error;
-        }
-
-        console.log('User logged in successfully:', data.user.id);
-        return data;
+    if (existingUser) {
+      throw new Error("User already exists");
     }
+
+    // hash password
+    const passwordHash = await this.hashPassword(password);
+
+    // create user
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .insert({
+        email,
+        password_hash: passwordHash,
+        name,
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error("Error creating user:", userError);
+      throw new Error("Failed to create user");
+    }
+
+    // create profile
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .insert({
+        user_id: user.id,
+        role: "user",
+      });
+
+    if (profileError) {
+      console.error("Error creating profile:", profileError);
+      throw new Error("Failed to create profile");
+    }
+
+    // generate JWT
+    const token = generateToken(user.id, user.email);
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+      token,
+    };
+  },
+
+  async login(email: string, password: string) {
+    console.log("Login attempt:", email);
+
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (error) {
+      console.error(error);
+      throw new Error("Database error");
+    }
+
+    if (!user) {
+      throw new Error("Invalid credentials");
+    }
+
+    const valid = await this.verifyPassword(password, user.password_hash);
+
+    if (!valid) {
+      throw new Error("Invalid credentials");
+    }
+
+    const token = generateToken(user.id, user.email);
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+      profile,
+      token,
+    };
+  },
+
+  async getProfile(userId: string) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (error) throw error;
+
+    return data;
+  },
+
+  async updateProfile(userId: string, profileData: any) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .update(profileData)
+      .eq("user_id", userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return data;
+  },
 };

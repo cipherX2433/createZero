@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,21 +20,10 @@ export default function Login() {
         setError(null);
 
         try {
-            const data = await apiService.login({ email, password });
-
-            if (data.session) {
-                await supabase.auth.setSession({
-                    access_token: data.session.access_token,
-                    refresh_token: data.session.refresh_token,
-                });
-                navigate("/dashboard");
-            }
+            await apiService.login({ email, password });
+            navigate("/dashboard");
         } catch (err: any) {
-            if (err.message.includes("rate limit")) {
-                setError("Email rate limit exceeded. Please try again later or check your Supabase Auth settings.");
-            } else {
-                setError(err.message);
-            }
+            setError(err.message);
             setIsLoading(false);
         }
     };
@@ -102,3 +90,4 @@ export default function Login() {
         </div>
     );
 }
+
