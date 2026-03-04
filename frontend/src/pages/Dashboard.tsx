@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { apiService } from "@/services/api.service";
 import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { LogOut, Zap } from "lucide-react";
 import SocialPostCanvas from "@/components/socialPostCanva";
 
 const NICHES = [
@@ -98,20 +98,26 @@ export default function Dashboard() {
     const scoreColor = post?.virality_score >= 85 ? "#10b981" : post?.virality_score >= 70 ? "#f59e0b" : "#ef4444";
 
     return (
-        <div style={{ minHeight: "100vh", background: "#060608", fontFamily: "'DM Sans', sans-serif", color: "#fff" }}>
+        <div style={{ minHeight: "100vh", background: "#000000", fontFamily: "'Geist', sans-serif", color: "#fff", position: "relative", overflow: "hidden" }}>
+            {/* Background Glows */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] glow-teal opacity-20 blur-[120px]" />
+                <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] glow-white opacity-10 blur-[100px]" />
+            </div>
+
             <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Syne:wght@700;800&family=Space+Mono:ital@0;1&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0a0a0f; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        .gen-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 32px rgba(99,102,241,0.4) !important; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
+        .gen-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 32px rgba(20,184,166,0.3) !important; }
         .gen-btn:active { transform: translateY(0); }
         .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
         .tab-btn { transition: all 0.2s; }
         .tab-btn:hover { background: rgba(255,255,255,0.06) !important; }
-        select option { background: #1a1a2e; color: #fff; }
-        .input-field:focus { outline: none; border-color: #6366f1 !important; box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+        select option { background: #000; color: #fff; }
+        .input-field:focus { outline: none; border-color: #14b8a6 !important; box-shadow: 0 0 0 3px rgba(20,184,166,0.1); }
         .pulse { animation: pulse 2s ease-in-out infinite; }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -120,14 +126,16 @@ export default function Dashboard() {
       `}</style>
 
             {/* Header */}
-            <div style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "18px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(6,6,8,0.9)", backdropFilter: "blur(12px)", position: "sticky", top: 0, zIndex: 100 }}>
+            <div style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", padding: "18px 32px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(0,0,0,0.8)", backdropFilter: "blur(20px)", position: "sticky", top: 0, zIndex: 100 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <div style={{ width: 32, height: 32, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
+                    <div style={{ width: 32, height: 32, background: "white", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>
+                        <Zap size={18} fill="black" stroke="black" />
+                    </div>
                     <div>
                         <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 18, letterSpacing: "-0.5px" }}>
-                            Code<span style={{ color: "#6366f1" }}>Zero</span>
+                            Creator<span style={{ color: "#14b8a6" }}>Zero</span>
                         </div>
-                        <div style={{ fontSize: 11, color: "#555", marginTop: 1 }}>AI-Powered Viral Post Generator</div>
+                        <div style={{ fontSize: 10, color: "#444", marginTop: 1, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Elite Neural Engine</div>
                     </div>
                 </div>
 
@@ -153,7 +161,7 @@ export default function Dashboard() {
                                 className="input-field"
                                 value={niche}
                                 onChange={e => setNiche(e.target.value)}
-                                style={{ width: "100%", padding: "12px 16px", background: "#0f0f18", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: niche ? "#fff" : "#555", fontSize: 14, appearance: "none", cursor: "pointer", transition: "border-color 0.2s" }}
+                                style={{ width: "100%", padding: "12px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: niche ? "#fff" : "#555", fontSize: 14, appearance: "none", cursor: "pointer", transition: "border-color 0.2s" }}
                             >
                                 <option value="">Select your niche...</option>
                                 {NICHES.map(n => <option key={n.value} value={n.value}>{n.label}</option>)}
@@ -181,7 +189,7 @@ export default function Dashboard() {
                             placeholder="e.g. How to start vibe coding..."
                             value={topic}
                             onChange={e => setTopic(e.target.value)}
-                            style={{ width: "100%", padding: "12px 16px", background: "#0f0f18", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", fontSize: 14, transition: "border-color 0.2s" }}
+                            style={{ width: "100%", padding: "12px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 14, transition: "border-color 0.2s" }}
                         />
                     </div>
 
@@ -195,7 +203,7 @@ export default function Dashboard() {
                                 className="input-field"
                                 value={goal}
                                 onChange={e => setGoal(e.target.value)}
-                                style={{ width: "100%", padding: "12px 16px", background: "#0f0f18", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: goal ? "#fff" : "#555", fontSize: 14, appearance: "none", cursor: "pointer", transition: "border-color 0.2s" }}
+                                style={{ width: "100%", padding: "12px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: goal ? "#fff" : "#555", fontSize: 14, appearance: "none", cursor: "pointer", transition: "border-color 0.2s" }}
                             >
                                 <option value="">Select goal...</option>
                                 {GOALS.map(g => <option key={g} value={g}>{g}</option>)}
@@ -215,7 +223,7 @@ export default function Dashboard() {
                             placeholder="e.g. CodeZero..."
                             value={brandName}
                             onChange={e => setBrandName(e.target.value)}
-                            style={{ width: "100%", padding: "12px 16px", background: "#0f0f18", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", fontSize: 14, transition: "border-color 0.2s" }}
+                            style={{ width: "100%", padding: "12px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 14, transition: "border-color 0.2s" }}
                         />
                     </div>
 
@@ -230,7 +238,7 @@ export default function Dashboard() {
                             value={description}
                             onChange={e => setDescription(e.target.value)}
                             rows={4}
-                            style={{ width: "100%", padding: "12px 16px", background: "#0f0f18", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", fontSize: 13, resize: "vertical", lineHeight: 1.6, transition: "border-color 0.2s" }}
+                            style={{ width: "100%", padding: "12px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 13, resize: "vertical", lineHeight: 1.6, transition: "border-color 0.2s" }}
                         />
                     </div>
 
@@ -244,7 +252,7 @@ export default function Dashboard() {
                         className="gen-btn"
                         onClick={generatePost}
                         disabled={loading}
-                        style={{ padding: "15px 24px", background: loading ? "#333" : "linear-gradient(135deg, #6366f1, #8b5cf6)", border: "none", borderRadius: 12, color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, transition: "all 0.2s", marginTop: 4, fontFamily: "'Syne', sans-serif", letterSpacing: 0.5 }}
+                        style={{ padding: "15px 24px", background: loading ? "#222" : "white", border: "none", borderRadius: 12, color: loading ? "#555" : "black", fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, transition: "all 0.2s", marginTop: 4, fontFamily: "'Syne', sans-serif", letterSpacing: 0.5 }}
                     >
                         {loading ? (
                             <><span className="pulse">⚡</span> Crafting your post...</>
@@ -266,14 +274,14 @@ export default function Dashboard() {
                 {/* Right Panel */}
                 <div style={{ flex: 1, padding: 32, display: "flex", flexDirection: "column", gap: 20, background: "#07070d" }}>
                     {/* Tabs */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ display: "flex", background: "#0f0f18", borderRadius: 10, padding: 4, gap: 2 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 10 }}>
+                        <div style={{ display: "flex", background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: 4, gap: 2, border: "1px solid rgba(255,255,255,0.05)" }}>
                             {["card", "text"].map(t => (
                                 <button
                                     key={t}
                                     className="tab-btn"
                                     onClick={() => setView(t)}
-                                    style={{ padding: "8px 20px", borderRadius: 7, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, background: view === t ? "#1a1a2e" : "transparent", color: view === t ? "#fff" : "#666", transition: "all 0.2s" }}
+                                    style={{ padding: "8px 20px", borderRadius: 7, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 600, background: view === t ? "rgba(255,255,255,0.1)" : "transparent", color: view === t ? "#fff" : "#444", transition: "all 0.2s" }}
                                 >
                                     {t === "card" ? "🖼 Image Format" : "📝 Text View"}
                                 </button>
@@ -294,7 +302,7 @@ export default function Dashboard() {
 
                         {loading && (
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, height: 400, color: "#555" }}>
-                                <div style={{ width: 480, height: 480, borderRadius: 24, background: "#0f0f18", border: "1px solid rgba(255,255,255,0.06)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+                                <div style={{ width: 480, height: 480, borderRadius: 24, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
                                     <div className="pulse" style={{ fontSize: 40 }}>⚡</div>
                                     <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 16, color: "#555" }}>Generating viral content & image...</div>
                                     <div style={{ width: 200, height: 3, background: "#1a1a2e", borderRadius: 2, overflow: "hidden" }}>

@@ -5,11 +5,16 @@
 :root {
   --font-geist-sans: "Geist", sans-serif;
   --font-geist-mono: "Geist Mono", monospace;
+  --background: #000000;
+  --foreground: #ffffff;
+  --accent-teal: #14b8a6;
+  --accent-teal-soft: rgba(20, 184, 166, 0.15);
 }
 
 @layer base {
   body {
-    @apply bg-slate-950 text-white antialiased selection:bg-violet-500/30;
+    @apply bg-black text-white antialiased selection:bg-teal-500/30;
+    background-color: var(--background);
   }
 }
 
@@ -29,17 +34,25 @@
   }
 
   .glass {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+    @apply bg-white/[0.03] backdrop-blur-2xl border border-white/[0.05];
+  }
+
+  .glow-teal {
+    background: radial-gradient(circle at center, var(--accent-teal-soft) 0%, transparent 70%);
+  }
+
+  .glow-white {
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
   }
 }
 
 /* Custom scrollbar for a premium feel */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-slate-950;
+  background: #000000;
 }
 
 ::-webkit-scrollbar-thumb {
