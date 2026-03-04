@@ -4,35 +4,35 @@
 
 const NICHE_TONE_GUIDES: Record<string, string> = {
 
-  "tech / saas":
-    "Write like a YC founder or elite indie hacker. Technical but simple. Use builder language: ship, iterate, 0→1, leverage. Avoid marketing fluff.",
+    "tech / saas":
+        "Write like a YC founder or elite indie hacker. Technical but simple. Use builder language: ship, iterate, 0→1, leverage. Avoid marketing fluff.",
 
-  "finance & investing":
-    "Write like a disciplined hedge fund manager. Data-driven. Specific numbers, ROI, % returns. Tone: authoritative, calm, confident.",
+    "finance & investing":
+        "Write like a disciplined hedge fund manager. Data-driven. Specific numbers, ROI, % returns. Tone: authoritative, calm, confident.",
 
-  "health & fitness":
-    "Write like an elite strength coach. Direct, blunt, motivating. Use strong verbs and physical metaphors. Short punchy sentences.",
+    "health & fitness":
+        "Write like an elite strength coach. Direct, blunt, motivating. Use strong verbs and physical metaphors. Short punchy sentences.",
 
-  "personal branding":
-    "Write like a top LinkedIn creator. Personal storytelling. Use curiosity hooks and relatable lessons.",
+    "personal branding":
+        "Write like a top LinkedIn creator. Personal storytelling. Use curiosity hooks and relatable lessons.",
 
-  "e-commerce / dtc":
-    "Write like a DTC growth operator. Conversion-focused, urgency-driven. Emphasize outcomes and results.",
+    "e-commerce / dtc":
+        "Write like a DTC growth operator. Conversion-focused, urgency-driven. Emphasize outcomes and results.",
 
-  "marketing & growth":
-    "Write like a growth strategist. Framework-driven. Tactical insights readers can implement immediately.",
+    "marketing & growth":
+        "Write like a growth strategist. Framework-driven. Tactical insights readers can implement immediately.",
 
-  "mindset & motivation":
-    "Write like David Goggins + Naval Ravikant. Philosophical, bold truths, emotionally impactful.",
+    "mindset & motivation":
+        "Write like David Goggins + Naval Ravikant. Philosophical, bold truths, emotionally impactful.",
 
-  "education & coaching":
-    "Write like a world-class educator. Structured learning. Clear frameworks and actionable steps.",
+    "education & coaching":
+        "Write like a world-class educator. Structured learning. Clear frameworks and actionable steps.",
 
-  "entrepreneurship":
-    "Write like a battle-tested founder. Honest, strategic, focused on leverage and opportunity.",
+    "entrepreneurship":
+        "Write like a battle-tested founder. Honest, strategic, focused on leverage and opportunity.",
 
-  "real estate":
-    "Write like an experienced investor. Numbers, cap rates, ROI, deal insights."
+    "real estate":
+        "Write like an experienced investor. Numbers, cap rates, ROI, deal insights."
 };
 
 
@@ -42,21 +42,21 @@ const NICHE_TONE_GUIDES: Record<string, string> = {
 
 const CONTENT_ANGLES = [
 
-  "Contrarian take challenging conventional wisdom",
+    "Contrarian take challenging conventional wisdom",
 
-  "Data-driven insight based on surprising statistic",
+    "Data-driven insight based on surprising statistic",
 
-  "Product launch story explaining why it exists",
+    "Product launch story explaining why it exists",
 
-  "Myth busting — expose a common industry lie",
+    "Myth busting — expose a common industry lie",
 
-  "Before vs After transformation",
+    "Before vs After transformation",
 
-  "Urgent warning about a costly mistake",
+    "Urgent warning about a costly mistake",
 
-  "Insider secret known only to professionals",
+    "Insider secret known only to professionals",
 
-  "Bold prediction about future of the industry"
+    "Bold prediction about future of the industry"
 
 ];
 
@@ -66,46 +66,46 @@ const CONTENT_ANGLES = [
 // ─────────────────────────────────────────────
 
 export const nicheThemes: Record<string, {
-  colors: string
-  icons: string
-  mood: string
-  typography: string
+    colors: string
+    icons: string
+    mood: string
+    typography: string
 }> = {
 
-  "tech / saas": {
-    colors: "deep navy #0D1B2A background, electric blue #1565C0 accents, cyan highlights",
-    icons: "circuit patterns, network nodes, server icons",
-    mood: "futuristic tech startup",
-    typography: "bold geometric sans serif"
-  },
+    "tech / saas": {
+        colors: "deep navy #0D1B2A background, electric blue #1565C0 accents, cyan highlights",
+        icons: "circuit patterns, network nodes, server icons",
+        mood: "futuristic tech startup",
+        typography: "bold geometric sans serif"
+    },
 
-  "finance & investing": {
-    colors: "charcoal background, gold highlights, emerald accents",
-    icons: "bull icon, growth chart, coin stack",
-    mood: "premium institutional finance",
-    typography: "serif headline + modern sans body"
-  },
+    "finance & investing": {
+        colors: "charcoal background, gold highlights, emerald accents",
+        icons: "bull icon, growth chart, coin stack",
+        mood: "premium institutional finance",
+        typography: "serif headline + modern sans body"
+    },
 
-  "health & fitness": {
-    colors: "dark slate background, neon lime accent, orange secondary",
-    icons: "dumbbell outline, lightning bolt, ECG line",
-    mood: "high energy performance",
-    typography: "condensed bold athletic font"
-  },
+    "health & fitness": {
+        colors: "dark slate background, neon lime accent, orange secondary",
+        icons: "dumbbell outline, lightning bolt, ECG line",
+        mood: "high energy performance",
+        typography: "condensed bold athletic font"
+    },
 
-  "marketing & growth": {
-    colors: "midnight background, coral accent, sky blue highlights",
-    icons: "funnel icon, target bullseye, analytics chart",
-    mood: "bold tactical growth",
-    typography: "modern geometric sans serif"
-  },
+    "marketing & growth": {
+        colors: "midnight background, coral accent, sky blue highlights",
+        icons: "funnel icon, target bullseye, analytics chart",
+        mood: "bold tactical growth",
+        typography: "modern geometric sans serif"
+    },
 
-  "entrepreneurship": {
-    colors: "black background, orange accent, gold highlight",
-    icons: "rocket launch, chess king piece",
-    mood: "ambitious startup energy",
-    typography: "bold condensed display"
-  }
+    "entrepreneurship": {
+        colors: "black background, orange accent, gold highlight",
+        icons: "rocket launch, chess king piece",
+        mood: "ambitious startup energy",
+        typography: "bold condensed display"
+    }
 
 };
 
@@ -116,22 +116,22 @@ export const nicheThemes: Record<string, {
 // ─────────────────────────────────────────────
 
 export const generateViralScriptPrompt = (
-  topic: string,
-  niche: string,
-  goal: string,
-  description: string,
-  brandName?: string,
-  callCount: number = 0
+    topic: string,
+    niche: string,
+    goal: string,
+    description: string,
+    brandName?: string,
+    callCount: number = 0
 ): string => {
 
-  const nicheKey = niche.toLowerCase();
-  const tone = NICHE_TONE_GUIDES[nicheKey] || "Write clearly with authority.";
+    const nicheKey = niche.toLowerCase();
+    const tone = NICHE_TONE_GUIDES[nicheKey] || "Write clearly with authority.";
 
-  const angle = CONTENT_ANGLES[callCount % CONTENT_ANGLES.length];
+    const angle = CONTENT_ANGLES[callCount % CONTENT_ANGLES.length];
 
-  const hasProduct = !!brandName || (description && description.length > 10);
+    const hasProduct = !!brandName || (description && description.length > 10);
 
-  const productSection = hasProduct ? `
+    const productSection = hasProduct ? `
 
 PRODUCT CONTEXT
 
@@ -153,7 +153,7 @@ CTA must direct readers to try the product.
 ` : "";
 
 
-return `
+    return `
 
 You are an elite viral social media strategist.
 
@@ -212,6 +212,16 @@ Every key point must include one of:
 • insight
 
 --------------------------------
+JSON FORMATTING RULES
+--------------------------------
+
+1. NEVER include trailing commas.
+2. NEVER include single quotes for strings (use double quotes).
+3. ESCAPE all double quotes inside strings.
+4. Output EXACTLY 3 items in the key_points array.
+5. Ensure the niche_label EXACTLY matches the requested niche.
+
+--------------------------------
 OUTPUT FORMAT
 --------------------------------
 
@@ -246,17 +256,17 @@ JSON structure:
 // ─────────────────────────────────────────────
 
 export const generateImagePrompt = (
-  headline: string,
-  topic: string,
-  points: string,
-  cta: string,
-  theme: { colors: string; icons: string; mood: string; typography: string },
-  extraContext: string,
-  goal: string,
-  brandName?: string
+    headline: string,
+    topic: string,
+    points: string,
+    cta: string,
+    theme: { colors: string; icons: string; mood: string; typography: string },
+    extraContext: string,
+    goal: string,
+    brandName?: string
 ): string => {
 
-return `
+    return `
 
 Create a professional viral social media graphic.
 
