@@ -7,5 +7,4 @@ async function scriptRoutes(fastify, options) {
     // All script routes require authentication
     fastify.addHook('preHandler', auth_middleware_1.authMiddleware);
     fastify.post('/generate', script_controller_1.scriptController.generate);
-    fastify.get('/history', script_controller_1.scriptController.getHistory);
 }

@@ -2,71 +2,44 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.scriptController = void 0;
 const ai_service_1 = require("../ai/ai.service");
+const selectlayout_service_1 = require("../services/selectlayout.service");
+const design_service_1 = require("../services/design.service");
 const supabase_1 = require("../db/supabase");
 const zod_1 = require("zod");
-const generateScriptSchema = zod_1.z.object({
-    prompt: zod_1.z.string().min(10),
+const schema = zod_1.z.object({
+    prompt: zod_1.z.string(),
     niche: zod_1.z.string(),
+    purpose: zod_1.z.string().optional(),
+    description: zod_1.z.string().optional(),
+    brand_name: zod_1.z.string().optional()
 });
 exports.scriptController = {
     generate: async (request, reply) => {
-        try {
-            const { prompt, niche } = generateScriptSchema.parse(request.body);
-            const user = request.user;
-            // 1. Generate Script using AI Service
-            const script = await ai_service_1.aiService.generateViralScript(prompt, niche);
-            // 2. Save to Database
-            const { data, error } = await supabase_1.supabase
-                .from('scripts')
-                .insert({
-                user_id: user.id,
-                hook: script.hook,
-                body: script.body,
-                cta: script.cta,
-                caption: script.caption,
-                hashtags: script.hashtags,
-                viral_score: script.viral_score,
-                metadata: { prompt, niche }
-            })
-                .select()
-                .single();
-            if (error)
-                throw error;
-            // 3. Log usage (optional but recommended in GEMINI.md)
-            await supabase_1.supabase.from('usage_logs').insert({
-                user_id: user.id,
-                action: 'generate_script',
-                tokens_used: 0 // Update with actual token count later
-            });
-            return reply.send({
-                success: true,
-                data,
-            });
-        }
-        catch (err) {
-            if (err instanceof zod_1.z.ZodError) {
-                return reply.status(400).send({ success: false, error: err.issues });
+        const { prompt, niche, purpose, description, brand_name } = schema.parse(request.body);
+        const user = request.user;
+        const { count } = await supabase_1.supabase
+            .from("scripts")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", user.id);
+        const callCount = count ?? 0;
+        const script = await ai_service_1.aiService.generateViralScript(prompt, niche, purpose, description, brand_name, callCount);
+        const background = await ai_service_1.aiService.generateBackgroundImage(niche);
+        const layout = (0, selectlayout_service_1.selectLayout)(script);
+        const design = (0, design_service_1.generateDesign)(niche);
+        await supabase_1.supabase.from("scripts").insert({
+            user_id: user.id,
+            hook: script.hook_quote,
+            body: script.subtext,
+            hashtags: script.hashtags
+        });
+        return reply.send({
+            success: true,
+            data: {
+                script,
+                background,
+                layout,
+                design
             }
-            return reply.status(500).send({ success: false, error: err.message });
-        }
-    },
-    getHistory: async (request, reply) => {
-        try {
-            const user = request.user;
-            const { data, error } = await supabase_1.supabase
-                .from('scripts')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false });
-            if (error)
-                throw error;
-            return reply.send({
-                success: true,
-                data,
-            });
-        }
-        catch (err) {
-            return reply.status(500).send({ success: false, error: err.message });
-        }
-    },
+        });
+    }
 };

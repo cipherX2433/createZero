@@ -2,9 +2,15 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.supabase = void 0;
 const supabase_js_1 = require("@supabase/supabase-js");
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
-if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase credentials missing. Ensure SUPABASE_URL and SUPABASE_ANON_KEY are set in .env');
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+console.log("Using service role:", process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(0, 20));
+if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing Supabase environment variables');
 }
-exports.supabase = (0, supabase_js_1.createClient)(supabaseUrl, supabaseAnonKey);
+exports.supabase = (0, supabase_js_1.createClient)(supabaseUrl, supabaseServiceKey, {
+    auth: {
+        autoRefreshToken: false,
+        persistSession: false
+    }
+});

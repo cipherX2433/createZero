@@ -1,110 +1,67 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
-import { aiService } from '../ai/ai.service';
-import { supabase } from '../db/supabase';
-import { z } from 'zod';
+import { FastifyRequest, FastifyReply } from "fastify";
+import { aiService } from "../ai/ai.service";
+import { selectLayout } from "../services/selectlayout.service";
+import { generateDesign } from "../services/design.service";
+import { supabase } from "../db/supabase";
+import { z } from "zod";
 
-const generateScriptSchema = z.object({
-    prompt: z.string().min(3),
-    niche: z.string().min(1),
-    purpose: z.string().optional().default(''),
-    description: z.string().optional().default(''),
+const schema = z.object({
+  prompt: z.string(),
+  niche: z.string(),
+  purpose: z.string().optional(),
+  description: z.string().optional(),
+  brand_name: z.string().optional()
 });
 
 export const scriptController = {
-    generate: async (request: FastifyRequest, reply: FastifyReply) => {
-        try {
-            const { prompt, niche, purpose, description } = generateScriptSchema.parse(request.body);
-            const user = (request as any).user;
 
-            // 1. Generate Script content using AI Service
-            const script = await aiService.generateViralScript(prompt, niche, purpose, description);
+  generate: async (request: FastifyRequest, reply: FastifyReply) => {
 
-            // 2. Generate the actual social media post IMAGE using Imagen
-            const imageDataUrl = await aiService.generatePostImage(
-                niche,
-                prompt,
-                purpose,
-                script.headline,
-                script.key_points || [],
-                script.cta,
-                description + " " + "Add visual elements and a logo relevant to this niche."
-            );
+    const { prompt, niche, purpose, description, brand_name } =
+      schema.parse(request.body);
 
-            // 3. Save to Database
-            const { data, error } = await supabase
-                .from('scripts')
-                .insert({
-                    user_id: user.id,
-                    hook: script.hook_quote || script.headline,
-                    body: script.subtext,
-                    cta: script.cta,
-                    caption: script.footer_line || "",
-                    hashtags: script.hashtags,
-                    viral_score: script.virality_score,
-                    metadata: {
-                        prompt,
-                        niche,
-                        purpose,
-                        headline: script.headline,
-                        key_points: script.key_points,
-                        niche_label: script.niche_label,
-                        has_generated_image: !!imageDataUrl,
-                    }
-                })
-                .select()
-                .single();
+    const user = (request as any).user;
 
-            if (error) throw error;
+    const { count } = await supabase
+      .from("scripts")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
 
-            // 4. Log usage
-            await supabase.from('usage_logs').insert({
-                user_id: user.id,
-                action: 'generate_script',
-                tokens_used: 0
-            });
+    const callCount = count ?? 0;
 
-            return reply.send({
-                success: true,
-                data: {
-                    ...data,
-                    // Send everything the frontend expects
-                    headline: script.headline,
-                    subtext: script.subtext,
-                    hook_quote: script.hook_quote,
-                    key_points: script.key_points,
-                    footer_line: script.footer_line,
-                    virality_score: script.virality_score,
-                    niche_label: script.niche_label,
-                    image_url: imageDataUrl,
-                },
-            });
-        } catch (err: any) {
+    const script = await aiService.generateViralScript(
+      prompt,
+      niche,
+      purpose,
+      description,
+      brand_name,
+      callCount
+    );
 
-            if (err instanceof z.ZodError) {
-                return reply.status(400).send({ success: false, error: err.issues });
-            }
-            return reply.status(500).send({ success: false, error: err.message });
-        }
-    },
+    const background =
+      await aiService.generateBackgroundImage(niche);
 
-    getHistory: async (request: FastifyRequest, reply: FastifyReply) => {
-        try {
-            const user = (request as any).user;
+    const layout = selectLayout(script);
 
-            const { data, error } = await supabase
-                .from('scripts')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false });
+    const design = generateDesign(niche);
 
-            if (error) throw error;
+    await supabase.from("scripts").insert({
+      user_id: user.id,
+      hook: script.hook_quote,
+      body: script.subtext,
+      hashtags: script.hashtags
+    });
 
-            return reply.send({
-                success: true,
-                data,
-            });
-        } catch (err: any) {
-            return reply.status(500).send({ success: false, error: err.message });
-        }
-    },
+    return reply.send({
+      success: true,
+      data: {
+        script,
+        background,
+        layout,
+        design
+      }
+    });
+
+  }
+
 };

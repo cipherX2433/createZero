@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { apiService } from "@/services/api.service";
 import { useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
+import SocialPostCanvas from "@/components/socialPostCanva";
 
 const NICHES = [
     { label: "Tech / SaaS", value: "tech_saas", colors: { primary: "#6366f1", secondary: "#0ea5e9", bg: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)", accent: "#a78bfa", tag: "#1e1b4b" } },
@@ -31,6 +32,7 @@ export default function Dashboard() {
     const [topic, setTopic] = useState("");
     const [goal, setGoal] = useState("");
     const [description, setDescription] = useState("");
+    const [brandName, setBrandName] = useState("");
     const [view, setView] = useState("card");
     const [loading, setLoading] = useState(false);
     const [post, setPost] = useState<any>(null);
@@ -61,14 +63,23 @@ export default function Dashboard() {
 
         try {
             const nicheLabel = NICHES.find(n => n.value === niche)?.label || niche;
-            const script = await apiService.generateScript({
+            const apiData = await apiService.generateScript({
                 prompt: topic,
                 niche: nicheLabel,
                 purpose: goal,
-                description
+                description,
+                brand_name: brandName
             });
-            // The API returns the script data matching the new fields (headline, subtext, hook_quote, image_url etc.)
-            setPost(script);
+
+            // Map the API response format: .script, .background, .layout
+            const mappedPost = apiData.script ? {
+                ...apiData.script,
+                background: apiData.background,
+                layout: apiData.layout,
+                design: apiData.design
+            } : apiData;
+
+            setPost(mappedPost);
             setView("card");
         } catch (e: any) {
             setError(e.message || "Failed to generate post. Please try again.");
@@ -107,7 +118,7 @@ export default function Dashboard() {
                     <div style={{ width: 32, height: 32, background: "linear-gradient(135deg, #6366f1, #8b5cf6)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>⚡</div>
                     <div>
                         <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 18, letterSpacing: "-0.5px" }}>
-                            Script <span style={{ color: "#6366f1" }}>Architect</span>
+                            Code<span style={{ color: "#6366f1" }}>Zero</span>
                         </div>
                         <div style={{ fontSize: 11, color: "#555", marginTop: 1 }}>AI-Powered Viral Post Generator</div>
                     </div>
@@ -184,6 +195,21 @@ export default function Dashboard() {
                             </select>
                             <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", color: "#555", pointerEvents: "none" }}>▾</span>
                         </div>
+                    </div>
+
+                    {/* Brand Name */}
+                    <div>
+                        <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: "#666", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                            <span>🏷️</span> Brand / Product Name <span style={{ color: "#333", fontWeight: 400, textTransform: "none", letterSpacing: 0, fontSize: 10 }}>(optional)</span>
+                        </label>
+                        <input
+                            className="input-field"
+                            type="text"
+                            placeholder="e.g. CodeZero..."
+                            value={brandName}
+                            onChange={e => setBrandName(e.target.value)}
+                            style={{ width: "100%", padding: "12px 16px", background: "#0f0f18", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, color: "#fff", fontSize: 14, transition: "border-color 0.2s" }}
+                        />
                     </div>
 
                     {/* Description */}
@@ -271,22 +297,24 @@ export default function Dashboard() {
                             </div>
                         )}
 
-                        {/* Generated Image View (From Gemini Imagen API) */}
-                        {post && view === "card" && post.image_url && (
+                        {/* Generated Image View (Using SocialPostCanvas) */}
+                        {post && view === "card" && post.background && (
                             <div className="fade-up" style={{ width: '100%', maxWidth: 540, display: "flex", flexDirection: "column", gap: 16 }}>
-                                <div style={{ width: '100%', aspectRatio: '1/1', borderRadius: 24, overflow: "hidden", background: "#0a0a0f", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                                    <img src={post.image_url} alt="Generated post image" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                    <a href={post.image_url} download="social_post.png" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: "12px 24px", background: "rgba(255,255,255,0.1)", borderRadius: 12, color: "#fff", textDecoration: "none", fontSize: 14, fontWeight: 600, border: "1px solid rgba(255,255,255,0.1)", transition: "all 0.2s" }} className="tab-btn">
-                                        ⬇️ Download Image
-                                    </a>
+                                <div style={{ width: 540, height: 540, borderRadius: 24, overflow: "hidden", background: "#0a0a0f", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                                    <div style={{ transform: "scale(0.5)", transformOrigin: "top left", width: 1080, height: 1080 }}>
+                                        <SocialPostCanvas
+                                            background={post.background}
+                                            headline={post.headline}
+                                            points={post.key_points || []}
+                                            cta={post.cta}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         )}
 
                         {/* Fallback CSS Card (if image generation fails or is not enabled) */}
-                        {post && view === "card" && !post.image_url && (
+                        {post && view === "card" && !post.background && !post.image_url && (
                             <div className="fade-up" ref={cardRef} style={{ width: 480, borderRadius: 24, overflow: "hidden", background: colors.bg, boxShadow: `0 0 60px ${colors.primary}30, 0 40px 80px rgba(0,0,0,0.6)`, border: `1px solid ${colors.primary}30`, position: "relative" }}>
                                 {/* Decorative orb */}
                                 <div style={{ position: "absolute", top: -60, right: -60, width: 200, height: 200, borderRadius: "50%", background: `radial-gradient(circle, ${colors.primary}30, transparent 70%)`, pointerEvents: "none" }} />
@@ -364,7 +392,7 @@ export default function Dashboard() {
                                     {/* Bottom brand */}
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 16, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
                                         <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 13, letterSpacing: 1 }}>
-                                            SCRIPT<span style={{ color: colors.primary }}>ARCHITECT</span>
+                                            CODE<span style={{ color: colors.primary }}>ZERO</span>
                                         </div>
                                         <div style={{ fontSize: 11, color: "#444" }}>AI Generated · Ready to Share</div>
                                     </div>

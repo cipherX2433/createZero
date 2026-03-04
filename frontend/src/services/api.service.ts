@@ -18,6 +18,7 @@ export interface GenerateScriptRequest {
     niche: string;
     purpose?: string;
     description?: string;
+    brand_name?: string;
 }
 
 
@@ -41,7 +42,7 @@ export const apiService = {
         return result.data;
     },
 
-    async generateScript(data: GenerateScriptRequest): Promise<Script> {
+    async generateScript(data: GenerateScriptRequest): Promise<any> {
         const authHeader = await getAuthHeader();
         const response = await fetch(`${API_BASE_URL}/scripts/generate`, {
             method: 'POST',
