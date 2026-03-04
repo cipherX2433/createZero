@@ -1,84 +1,78 @@
 # CreatorZero
 
-CreatorZero is a scalable, AI-powered SaaS platform designed for long-term product evolution. It empowers content creators by automating script generation, trend analysis, and content scheduling with a focus on psychological engagement and viral potential.
+CreatorZero is a premium, AI-powered SaaS platform designed for content creators. It automates script generation, image creation, and provides a dynamic post editor to maximize engagement and viral potential.
 
-## 🚀 Mission & Principles
+## 🚀 Key Features
 
-- **Think Long-Term**: Built for scale and future-ready evolution.
-- **Clean Abstractions**: Strict layer isolation and modular service architecture.
-- **AI-First**: Deep integration of structured AI output for high-quality content generation.
-- **Growth & Retention**: Every feature is designed to serve user growth and engagement.
+- **AI Script Engine**: Generates high-retention scripts using pattern-interrupt psychology.
+- **AI Image Generation**: Built-in integration with Hugging Face (Playground v2) for high-quality visuals.
+- **Dynamic Post Canvas**: A real-time editor to preview and customize social media posts with modern layouts.
+- **Scalable Architecture**: Built for 100k+ users with strict layer isolation and modular services.
 
 ## 🏗️ Project Structure
 
 ```text
 createZero/
-├── frontend/          # React + Vite + TypeScript (UI layer)
-├── backend/           # Fastify + TypeScript (API layer)
-├── GEMINI.md          # Core architecture and behavior guidelines
-└── README.md          # Project documentation
+├── frontend/          # React + Vite + TypeScript + Tailwind (UI Layer)
+├── backend/           # Fastify + TypeScript + Zod (API Layer)
+├── GEMINI.md          # Core architecture and senior engineering guidelines
+└── README.md          # Project overview and setup
 ```
 
 ## 🛠️ Tech Stack
 
 ### Frontend
 - **Framework**: React (Vite)
-- **Language**: TypeScript
 - **Styling**: Tailwind CSS + Radix UI
-- **State Management**: React Query (TanStack)
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
+- **State**: TanStack Query (React Query)
+- **Animation**: Framer Motion
+- **Components**: Lucide Icons
 
 ### Backend
 - **Framework**: Fastify
-- **Language**: TypeScript
-- **Validation**: Zod
-- **Security**: Fastify Helmet & CORS
-- **Database**: Supabase (PostgreSQL with RLS)
-- **Authentication**: Supabase Auth
+- **AI Layer**: Hugging Face Inference API + Gemini Prompts
+- **Validation**: Zod (strict typing)
+- **Database & Auth**: Supabase (PostgreSQL with RLS)
 
 ## 🏁 Getting Started
 
 ### Prerequisites
-- Node.js (Latest LTS recommended)
-- npm or yarn
-- Supabase account (for database and auth)
+- Node.js (Latest LTS)
+- Supabase Account
+- Hugging Face API Token (for image generation)
 
 ### Installation
 
-1. **Clone the repository**:
+1. **Clone & Install**:
    ```bash
    git clone <repository-url>
    cd createZero
    ```
 
-2. **Setup Backend**:
+2. **Backend Setup**:
    ```bash
    cd backend
    npm install
-   cp .env.example .env
-   # Update .env with your Supabase credentials
+   cp .env.example .env # Add SUPABASE_URL, SUPABASE_KEY, HF_TOKEN
    npm run dev
    ```
 
-3. **Setup Frontend**:
+3. **Frontend Setup**:
    ```bash
    cd ../frontend
    npm install
-   cp .env.example .env
-   # Update .env with your Supabase credentials
+   cp .env.example .env # Add VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
    npm run dev
    ```
 
-## 📐 Architecture Guidelines
+## 📐 Architecture Principles
 
-The project follows a strict architectural discipline as outlined in [GEMINI.md](file:///Users/mohitranjan11082/Documents/createZero/GEMINI.md):
+The project adheres to strict guidelines defined in `GEMINI.md`:
 
-- **Backend**: Routes → Controllers → Services → AI Layer → DB Layer.
-- **Scalability**: Designed for 100k+ users and heavy AI usage.
-- **Security**: Row Level Security (RLS) is enforced for all user data.
-- **Outputs**: AI must always return structured JSON (hooks, body, CTA, viral score).
+- **Isolation**: Routes → Controllers → Services → AI Layer → DB Layer.
+- **Security**: Row Level Security (RLS) is non-negotiable.
+- **Output**: All AI outputs are structured JSON with engagement scores.
 
 ## 📄 License
 
-This project is licensed under the ISC License.
+ISC License.
