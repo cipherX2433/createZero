@@ -21,9 +21,10 @@ export const authController = {
             return reply.send({ success: true, data });
         } catch (err: any) {
             if (err instanceof z.ZodError) {
-                return reply.status(400).send({ success: false, error: err.issues });
+                const message = err.issues.map(i => i.message).join(', ');
+                return reply.status(400).send({ success: false, error: message });
             }
-            return reply.status(500).send({ success: false, error: err.message });
+            return reply.status(500).send({ success: false, error: err.message || 'Internal server error' });
         }
     },
 
@@ -34,9 +35,10 @@ export const authController = {
             return reply.send({ success: true, data });
         } catch (err: any) {
             if (err instanceof z.ZodError) {
-                return reply.status(400).send({ success: false, error: err.issues });
+                const message = err.issues.map(i => i.message).join(', ');
+                return reply.status(400).send({ success: false, error: message });
             }
-            return reply.status(401).send({ success: false, error: err.message });
+            return reply.status(401).send({ success: false, error: err.message || 'Authentication failed' });
         }
     },
 

@@ -38,6 +38,7 @@ export default function Dashboard() {
     const [post, setPost] = useState<any>(null);
     const [error, setError] = useState("");
     const cardRef = useRef(null);
+    const canvasRef = useRef<any>(null);
 
     const selectedNiche = NICHES.find(n => n.value === niche);
     const colors = selectedNiche?.colors || {
@@ -87,6 +88,12 @@ export default function Dashboard() {
             setLoading(false);
         }
     }
+
+    const handleDownload = () => {
+        if (canvasRef.current) {
+            canvasRef.current.download();
+        }
+    };
 
     const scoreColor = post?.virality_score >= 85 ? "#10b981" : post?.virality_score >= 70 ? "#f59e0b" : "#ef4444";
 
@@ -303,6 +310,7 @@ export default function Dashboard() {
                                 <div style={{ width: 540, height: 540, borderRadius: 24, overflow: "hidden", background: "#0a0a0f", boxShadow: "0 20px 60px rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)" }}>
                                     <div style={{ transform: "scale(0.5)", transformOrigin: "top left", width: 1080, height: 1080 }}>
                                         <SocialPostCanvas
+                                            ref={canvasRef}
                                             background={post.background}
                                             headline={post.headline}
                                             points={post.key_points || []}
@@ -310,6 +318,29 @@ export default function Dashboard() {
                                         />
                                     </div>
                                 </div>
+                                <button
+                                    onClick={handleDownload}
+                                    style={{
+                                        padding: "12px 24px",
+                                        background: "linear-gradient(135deg, #10b981, #059669)",
+                                        border: "none",
+                                        borderRadius: 12,
+                                        color: "#fff",
+                                        fontSize: 14,
+                                        fontWeight: 700,
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 8,
+                                        transition: "all 0.2s",
+                                        width: "100%",
+                                        boxShadow: "0 4px 12px rgba(16,185,129,0.2)"
+                                    }}
+                                    className="gen-btn"
+                                >
+                                    <span>📥</span> Download Image
+                                </button>
                             </div>
                         )}
 

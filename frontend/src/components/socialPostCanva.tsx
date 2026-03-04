@@ -1,5 +1,5 @@
 import { Stage, Layer, Text, Image } from "react-konva";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 
 interface SocialPostProps {
   background: string;
@@ -8,28 +8,34 @@ interface SocialPostProps {
   cta: string;
 }
 
-export default function SocialPostCanvas({
-  background,
-  headline,
-  points,
-  cta
-}: SocialPostProps) {
-
+const SocialPostCanvas = forwardRef((props: SocialPostProps, ref) => {
+  const { background, headline, points, cta } = props;
   const [img, setImg] = useState<any>();
+  const stageRef = useRef<any>(null);
+
+  useImperativeHandle(ref, () => ({
+    download: () => {
+      if (!stageRef.current) return;
+      const dataURL = stageRef.current.toDataURL({ pixelRatio: 2 }); // Higher resolution for download
+      const link = document.createElement("a");
+      link.download = "creatorzero-social-post.png";
+      link.href = dataURL;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }));
 
   useEffect(() => {
-
     const image = new window.Image();
+    image.crossOrigin = "Anonymous"; // Crucial for toDataURL with external images
     image.src = background;
-
     image.onload = () => setImg(image);
-
   }, [background]);
 
   return (
-    <Stage width={1080} height={1080}>
+    <Stage width={1080} height={1080} ref={stageRef}>
       <Layer>
-
         {img && <Image image={img} width={1080} height={1080} />}
 
         {/* Headline */}
@@ -75,8 +81,9 @@ export default function SocialPostCanvas({
           align="center"
           wrap="word"
         />
-
       </Layer>
     </Stage>
   );
-}
+});
+
+export default SocialPostCanvas;

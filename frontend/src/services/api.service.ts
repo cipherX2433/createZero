@@ -64,7 +64,12 @@ export const apiService = {
             body: JSON.stringify(data),
         });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Signup failed');
+        if (!response.ok) {
+            const error = typeof result.error === 'object'
+                ? JSON.stringify(result.error)
+                : (result.error || 'Signup failed');
+            throw new Error(error);
+        }
 
         if (result.success && result.data.token) {
             localStorage.setItem('auth_token', result.data.token);
@@ -81,7 +86,12 @@ export const apiService = {
             body: JSON.stringify(data),
         });
         const result = await response.json();
-        if (!response.ok) throw new Error(result.error || 'Login failed');
+        if (!response.ok) {
+            const error = typeof result.error === 'object'
+                ? JSON.stringify(result.error)
+                : (result.error || 'Login failed');
+            throw new Error(error);
+        }
 
         if (result.success && result.data.token) {
             localStorage.setItem('auth_token', result.data.token);
