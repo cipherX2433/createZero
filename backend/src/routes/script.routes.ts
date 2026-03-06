@@ -7,4 +7,5 @@ export default async function scriptRoutes(fastify: FastifyInstance, options: Fa
     fastify.addHook('preHandler', authMiddleware);
 
     fastify.post('/generate', scriptController.generate);
+    fastify.get('/history', scriptController.getHistory);
 }

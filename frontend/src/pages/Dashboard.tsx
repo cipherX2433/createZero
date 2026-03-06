@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { apiService } from "@/services/api.service";
 import { useNavigate } from "react-router-dom";
 import { LogOut, Zap } from "lucide-react";
@@ -36,6 +36,7 @@ export default function Dashboard() {
     const [view, setView] = useState("card");
     const [loading, setLoading] = useState(false);
     const [post, setPost] = useState<any>(null);
+    const [history, setHistory] = useState<any[]>([]);
     const [error, setError] = useState("");
     const cardRef = useRef(null);
     const canvasRef = useRef<any>(null);
@@ -51,6 +52,37 @@ export default function Dashboard() {
         apiService.logout();
         window.dispatchEvent(new Event("auth-change"));
         navigate("/login");
+    };
+
+    const fetchHistory = async () => {
+        try {
+            const data = await apiService.fetchScripts();
+            setHistory(data || []);
+        } catch (e) {
+            console.error("Failed to fetch history:", e);
+        }
+    };
+
+    useEffect(() => {
+        fetchHistory();
+    }, []);
+
+    const loadFromHistory = (h: any) => {
+        const mappedPost = {
+            headline: h.metadata?.headline || h.hook,
+            subtext: h.body,
+            hook_quote: h.hook,
+            key_points: h.metadata?.key_points || [],
+            cta: h.cta,
+            footer_line: h.caption,
+            hashtags: h.hashtags,
+            virality_score: h.viral_score,
+            background: h.metadata?.background,
+            layout: h.metadata?.layout,
+            design: h.metadata?.design
+        };
+        setPost(mappedPost);
+        setView("card");
     };
 
     async function generatePost() {
@@ -82,6 +114,7 @@ export default function Dashboard() {
 
             setPost(mappedPost);
             setView("card");
+            fetchHistory(); // Refresh history
         } catch (e: any) {
             setError(e.message || "Failed to generate post. Please try again.");
         } finally {
@@ -267,6 +300,51 @@ export default function Dashboard() {
                             <div>• Post between 7-9am or 6-8pm for max reach</div>
                             <div>• Reply to every comment in the first hour</div>
                             <div>• Add to Stories within 30 min of posting</div>
+                        </div>
+                    )}
+
+                    {/* History Section */}
+                    {history.length > 0 && (
+                        <div style={{ marginTop: 10 }}>
+                            <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: "#666", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+                                <span>🕒</span> Recent Generations
+                            </label>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                                {history.map((h) => (
+                                    <div
+                                        key={h.id}
+                                        onClick={() => loadFromHistory(h)}
+                                        style={{
+                                            padding: "12px",
+                                            background: "rgba(255,255,255,0.02)",
+                                            border: "1px solid rgba(255,255,255,0.05)",
+                                            borderRadius: 10,
+                                            cursor: "pointer",
+                                            transition: "all 0.2s"
+                                        }}
+                                        onMouseOver={(e) => {
+                                            e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                                            e.currentTarget.style.borderColor = "rgba(20,184,166,0.3)";
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.background = "rgba(255,255,255,0.02)";
+                                            e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)";
+                                        }}
+                                    >
+                                        <div style={{ fontSize: 13, fontWeight: 600, color: "#eee", marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                            {h.metadata?.headline || h.hook}
+                                        </div>
+                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                            <div style={{ fontSize: 10, color: "#555" }}>
+                                                {new Date(h.created_at).toLocaleDateString()}
+                                            </div>
+                                            <div style={{ fontSize: 10, color: "#14b8a6", fontWeight: 700 }}>
+                                                ⚡ {h.viral_score}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>

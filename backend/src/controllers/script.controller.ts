@@ -49,7 +49,17 @@ export const scriptController = {
       user_id: user.id,
       hook: script.hook_quote,
       body: script.subtext,
-      hashtags: script.hashtags
+      cta: script.cta,
+      caption: script.footer_line || "",
+      hashtags: script.hashtags,
+      viral_score: script.virality_score,
+      metadata: {
+        headline: script.headline,
+        key_points: script.key_points,
+        background,
+        layout,
+        design
+      }
     });
 
     return reply.send({
@@ -60,6 +70,31 @@ export const scriptController = {
         layout,
         design
       }
+    });
+
+  },
+
+  getHistory: async (request: FastifyRequest, reply: FastifyReply) => {
+
+    const user = (request as any).user;
+
+    const { data, error } = await supabase
+      .from("scripts")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(3);
+
+    if (error) {
+      return reply.send({
+        success: false,
+        error: error.message
+      });
+    }
+
+    return reply.send({
+      success: true,
+      data: data || []
     });
 
   }
