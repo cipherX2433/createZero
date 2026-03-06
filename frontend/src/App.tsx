@@ -5,6 +5,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Onboarding from './pages/Onboarding';
 import AuthCallback from './pages/AuthCallback';
+import Profile from './pages/Profile';
 import { useEffect, useState } from 'react';
 
 function App() {
@@ -53,6 +54,10 @@ function App() {
                 <Route
                     path="/onboarding"
                     element={isAuthenticated ? <Onboarding /> : <Navigate to="/login" />}
+                />
+                <Route
+                    path="/profile"
+                    element={isAuthenticated ? <Profile /> : <Navigate to="/login" />}
                 />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="*" element={<Navigate to="/" />} />

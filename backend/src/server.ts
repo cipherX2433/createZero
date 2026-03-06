@@ -12,7 +12,18 @@ const server = Fastify({
 // Register Plugins
 server.register(helmet);
 server.register(cors, {
-    origin: '*', // Adjust for production
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+});
+
+// Error Handler
+server.setErrorHandler((error: any, request, reply) => {
+    server.log.error(error);
+    reply.status(error.statusCode || 500).send({
+        success: false,
+        error: error.message || 'Internal Server Error',
+    });
 });
 
 // Register Routes

@@ -115,27 +115,73 @@ export const authService = {
   },
 
   async getProfile(userId: string) {
-    const { data, error } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
       .single();
 
-    if (error) throw error;
+    if (profileError) throw profileError;
 
-    return data;
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("email, name")
+      .eq("id", userId)
+      .single();
+
+    if (userError) throw userError;
+
+    return {
+      ...profile,
+      email: user.email,
+      name: user.name,
+    };
   },
 
   async updateProfile(userId: string, profileData: any) {
-    const { data, error } = await supabase
-      .from("profiles")
-      .update(profileData)
-      .eq("user_id", userId)
-      .select()
-      .single();
+    console.log("[AuthService] updateProfile called for userId:", userId);
+    console.log("[AuthService] profileData received:", JSON.stringify(profileData));
 
-    if (error) throw error;
+    try {
+      const { name, niche, goals } = profileData;
 
-    return data;
+      // Update users table if name is provided
+      if (name !== undefined) {
+        console.log("[AuthService] Updating users.name to:", name);
+        const { error: userErr } = await supabase
+          .from("users")
+          .update({ name })
+          .eq("id", userId);
+
+        if (userErr) {
+          console.error("[AuthService] users.name update failed:", userErr);
+          throw new Error(`User name update failed: ${userErr.message}`);
+        }
+      }
+
+      // Prepare profile table updates
+      const profileUpdates: any = {};
+      if (niche !== undefined) profileUpdates.niche = niche;
+      if (goals !== undefined) profileUpdates.goals = goals;
+
+      if (Object.keys(profileUpdates).length > 0) {
+        console.log("[AuthService] Updating profiles table with:", JSON.stringify(profileUpdates));
+        const { error: profileErr } = await supabase
+          .from("profiles")
+          .update(profileUpdates)
+          .eq("user_id", userId);
+
+        if (profileErr) {
+          console.error("[AuthService] profiles update failed:", profileErr);
+          throw new Error(`Profile data update failed: ${profileErr.message}`);
+        }
+      }
+
+      console.log("[AuthService] Profile update cycle complete. Fetching updated profile.");
+      return this.getProfile(userId);
+    } catch (err: any) {
+      console.error("[AuthService] CRITICAL error in updateProfile:", err);
+      throw err;
+    }
   },
 };

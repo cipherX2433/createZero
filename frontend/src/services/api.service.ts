@@ -116,6 +116,18 @@ export const apiService = {
         return result.data;
     },
 
+    async fetchProfile(): Promise<any> {
+        const authHeader = await getAuthHeader();
+        const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+            headers: {
+                ...authHeader,
+            },
+        });
+        if (!response.ok) throw new Error('Failed to fetch profile');
+        const result = await response.json();
+        return result.data;
+    },
+
     logout() {
         localStorage.removeItem('auth_token');
     }

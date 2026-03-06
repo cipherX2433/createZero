@@ -1,7 +1,15 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Zap, BarChart3, Target, Shield, Cpu, Play } from 'lucide-react';
+import { ArrowRight, Zap, BarChart3, Target, Shield, Cpu, Play, User } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function LandingPage() {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem('auth_token');
+        setIsAuthenticated(!!token);
+    }, []);
+
     return (
         <div className="min-h-screen bg-black text-white selection:bg-teal-500/30 font-geist">
             {/* Background Glows */}
@@ -27,15 +35,23 @@ export default function LandingPage() {
                         <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
                     </div>
                     <div className="flex items-center gap-4 pl-4 border-l border-white/10">
-                        <Link to="/login" className="text-[13px] font-medium text-white/80 hover:text-white transition-colors">
-                            Log in
-                        </Link>
-                        <Link
-                            to="/signup"
-                            className="bg-white text-black px-4 py-1.5 rounded-full text-[13px] font-bold hover:bg-white/90 transition-all active:scale-95"
-                        >
-                            Create Account
-                        </Link>
+                        {isAuthenticated ? (
+                            <Link to="/profile" className="w-8 h-8 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all border border-white/10">
+                                <User className="w-4 h-4 text-white" />
+                            </Link>
+                        ) : (
+                            <>
+                                <Link to="/login" className="text-[13px] font-medium text-white/80 hover:text-white transition-colors">
+                                    Log in
+                                </Link>
+                                <Link
+                                    to="/signup"
+                                    className="bg-white text-black px-4 py-1.5 rounded-full text-[13px] font-bold hover:bg-white/90 transition-all active:scale-95"
+                                >
+                                    Create Account
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </nav>
