@@ -26,6 +26,13 @@ const GOALS = [
     "Spark Controversy / Debate",
 ];
 
+const TONES = [
+    { label: "Professional", value: "professional", icon: "💼" },
+    { label: "Casual", value: "casual", icon: "☕" },
+    { label: "Aggressive", value: "aggressive", icon: "🔥" },
+    { label: "Storytelling", value: "storytelling", icon: "📖" },
+];
+
 export default function Dashboard() {
     const navigate = useNavigate();
     const [niche, setNiche] = useState("");
@@ -33,6 +40,7 @@ export default function Dashboard() {
     const [goal, setGoal] = useState("");
     const [description, setDescription] = useState("");
     const [brandName, setBrandName] = useState("");
+    const [tone, setTone] = useState("professional");
     const [view, setView] = useState("card");
     const [loading, setLoading] = useState(false);
     const [post, setPost] = useState<any>(null);
@@ -101,7 +109,8 @@ export default function Dashboard() {
                 niche: nicheLabel,
                 purpose: goal,
                 description,
-                brand_name: brandName
+                brand_name: brandName,
+                tone: tone
             });
 
             // Map the API response format: .script, .background, .layout
@@ -242,6 +251,39 @@ export default function Dashboard() {
                                 {GOALS.map(g => <option key={g} value={g}>{g}</option>)}
                             </select>
                             <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", color: "#555", pointerEvents: "none" }}>▾</span>
+                        </div>
+                    </div>
+
+                    {/* Tone Selector */}
+                    <div>
+                        <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: "#666", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                            <span>🎭</span> Content Tone
+                        </label>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                            {TONES.map(t => (
+                                <button
+                                    key={t.value}
+                                    onClick={() => setTone(t.value)}
+                                    style={{
+                                        padding: "10px",
+                                        background: tone === t.value ? "rgba(20,184,166,0.1)" : "rgba(255,255,255,0.03)",
+                                        border: `1px solid ${tone === t.value ? "rgba(20,184,166,0.4)" : "rgba(255,255,255,0.08)"}`,
+                                        borderRadius: 10,
+                                        color: tone === t.value ? "#14b8a6" : "#888",
+                                        fontSize: 12,
+                                        fontWeight: 600,
+                                        cursor: "pointer",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        gap: 4,
+                                        transition: "all 0.2s"
+                                    }}
+                                >
+                                    <span style={{ fontSize: 16 }}>{t.icon}</span>
+                                    {t.label}
+                                </button>
+                            ))}
                         </div>
                     </div>
 

@@ -10,14 +10,15 @@ const schema = z.object({
   niche: z.string(),
   purpose: z.string().optional(),
   description: z.string().optional(),
-  brand_name: z.string().optional()
+  brand_name: z.string().optional(),
+  tone: z.string().optional()
 });
 
 export const scriptController = {
 
   generate: async (request: FastifyRequest, reply: FastifyReply) => {
 
-    const { prompt, niche, purpose, description, brand_name } =
+    const { prompt, niche, purpose, description, brand_name, tone } =
       schema.parse(request.body);
 
     const user = (request as any).user;
@@ -35,7 +36,8 @@ export const scriptController = {
       purpose,
       description,
       brand_name,
-      callCount
+      callCount,
+      tone
     );
 
     const background =

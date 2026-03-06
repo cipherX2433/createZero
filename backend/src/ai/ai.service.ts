@@ -42,7 +42,8 @@ export class AIService {
         purpose = "",
         description = "",
         brandName = "",
-        callCount = 0
+        callCount = 0,
+        tone = ""
     ) {
         const systemPrompt = generateViralScriptPrompt(
             prompt,
@@ -50,7 +51,8 @@ export class AIService {
             purpose,
             description,
             brandName,
-            callCount
+            callCount,
+            tone
         );
 
         let lastError;

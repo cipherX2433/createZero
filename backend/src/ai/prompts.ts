@@ -36,6 +36,14 @@ const NICHE_TONE_GUIDES: Record<string, string> = {
 };
 
 
+const TONE_GUIDES: Record<string, string> = {
+    "professional": "Direct, authoritative, polished, and result-oriented. Avoid slang. Use industry-standard terminology.",
+    "casual": "Friendly, relatable, conversational, and lighthearted. Write like you're talking to a friend over coffee. Use occasional emojis.",
+    "aggressive": "Bold, disruptive, high-energy, and patterns-interrupting. Use strong stances, scroll-stopping 'hot takes', and direct challenges to common beliefs.",
+    "storytelling": "Narrative-driven, emotionally resonant, and engaging. Start with a hook that draws them into a story. Use vivid descriptions and build tension."
+};
+
+
 // ─────────────────────────────────────────────
 // Content Angles (prevents repetition)
 // ─────────────────────────────────────────────
@@ -121,11 +129,17 @@ export const generateViralScriptPrompt = (
     goal: string,
     description: string,
     brandName?: string,
-    callCount: number = 0
+    callCount: number = 0,
+    tonePreference?: string
 ): string => {
 
     const nicheKey = niche.toLowerCase();
-    const tone = NICHE_TONE_GUIDES[nicheKey] || "Write clearly with authority.";
+    const nicheTone = NICHE_TONE_GUIDES[nicheKey] || "Write clearly with authority.";
+
+    const specificTone = tonePreference ? TONE_GUIDES[tonePreference.toLowerCase()] : "";
+    const finalTone = specificTone
+        ? `${specificTone} Additionally, follow this niche guidance: ${nicheTone}`
+        : nicheTone;
 
     const angle = CONTENT_ANGLES[callCount % CONTENT_ANGLES.length];
 
@@ -184,10 +198,10 @@ CONTENT ANGLE
 ${angle}
 
 --------------------------------
-VOICE STYLE
+VOICE STYLE (PRIMARY DIRECTION)
 --------------------------------
 
-${tone}
+${finalTone}
 
 ${productSection}
 

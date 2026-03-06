@@ -19,6 +19,7 @@ export interface GenerateScriptRequest {
     purpose?: string;
     description?: string;
     brand_name?: string;
+    tone?: string;
 }
 
 
