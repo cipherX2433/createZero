@@ -85,6 +85,7 @@ export default function Dashboard() {
             footer_line: h.caption,
             hashtags: h.hashtags,
             virality_score: h.viral_score,
+            virality_explanation: h.metadata?.virality_explanation,
             background: h.metadata?.background,
             layout: h.metadata?.layout,
             design: h.metadata?.design
@@ -591,6 +592,38 @@ export default function Dashboard() {
                             </div>
                         )}
                     </div>
+
+                    {/* Neural Analysis */}
+                    {post && post.virality_explanation && (
+                        <div className="fade-up" style={{
+                            background: "rgba(20,184,166,0.03)",
+                            border: "1px solid rgba(20,184,166,0.1)",
+                            borderRadius: 16,
+                            padding: "20px 24px",
+                            width: "100%",
+                            maxWidth: 540,
+                            margin: "0 auto",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 12
+                        }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(20,184,166,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🧠</div>
+                                <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, color: "#14b8a6", textTransform: "uppercase" }}>Neural Virality Analysis</div>
+                            </div>
+                            <div style={{ fontSize: 13, color: "#ccc", lineHeight: 1.7, fontStyle: "italic", borderLeft: "2px solid rgba(20,184,166,0.3)", paddingLeft: 16 }}>
+                                "{post.virality_explanation}"
+                            </div>
+                            <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 8 }}>
+                                <div style={{ padding: "4px 10px", background: "rgba(20,184,166,0.1)", borderRadius: 6, fontSize: 10, color: "#14b8a6", fontWeight: 600 }}>
+                                    ⚡ Deep Insight
+                                </div>
+                                <div style={{ fontSize: 11, color: "#555" }}>
+                                    Suggestions based on 1M+ viral pattern data
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

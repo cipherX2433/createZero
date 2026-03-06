@@ -58,6 +58,7 @@ export const scriptController = {
       metadata: {
         headline: script.headline,
         key_points: script.key_points,
+        virality_explanation: script.virality_explanation,
         background,
         layout,
         design

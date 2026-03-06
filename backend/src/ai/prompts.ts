@@ -226,6 +226,16 @@ Every key point must include one of:
 • insight
 
 --------------------------------
+DYNAMIC SCORING RULES
+--------------------------------
+
+Calculate "virality_score" dynamically (0-100). Do NOT default to 85 or 92.
+Criteria:
+- Hook Strength: Does it stop the scroll immediately?
+- Pattern Interrupt: Does it challenge conventional wisdom?
+- Value Density: Is there a clear takeaway in 3 points?
+
+--------------------------------
 JSON FORMATTING RULES
 --------------------------------
 
@@ -255,7 +265,8 @@ JSON structure:
   "cta": "", (MAX 40 CHARS)
   "footer_line": "",
   "hashtags": ["", "", ""],
-  "virality_score": 85,
+  "virality_score": 0, (Calculate dynamically 0-100)
+  "virality_explanation": "", (Concise analysis of WHY this score was given + 1 specific suggestion to improve it)
   "niche_label": "${niche}"
 }
 
