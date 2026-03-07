@@ -1,5 +1,33 @@
 import { InferenceClient } from "@huggingface/inference";
-import { generateViralScriptPrompt, nicheThemes } from "./prompts";
+
+// Map aspect ratios to pixel dimensions for SDXL
+// SDXL works best with dimensions that are multiples of 8
+const ASPECT_DIMENSIONS: Record<string, Record<string, { width: number; height: number }>> = {
+    "720P": {
+        "1:1": { width: 720, height: 720 },
+        "16:9": { width: 1024, height: 576 },
+        "9:16": { width: 576, height: 1024 },
+        "4:3": { width: 960, height: 720 },
+        "3:4": { width: 720, height: 960 },
+        "5:4": { width: 896, height: 720 },
+        "4:5": { width: 720, height: 896 },
+        "3:2": { width: 1024, height: 680 },
+        "2:3": { width: 680, height: 1024 },
+        "21:9": { width: 1024, height: 440 },
+    },
+    "1080P": {
+        "1:1": { width: 1024, height: 1024 },
+        "16:9": { width: 1024, height: 576 },
+        "9:16": { width: 576, height: 1024 },
+        "4:3": { width: 1024, height: 768 },
+        "3:4": { width: 768, height: 1024 },
+        "5:4": { width: 1024, height: 816 },
+        "4:5": { width: 816, height: 1024 },
+        "3:2": { width: 1024, height: 680 },
+        "2:3": { width: 680, height: 1024 },
+        "21:9": { width: 1024, height: 440 },
+    }
+};
 
 export class AIService {
 
@@ -9,103 +37,37 @@ export class AIService {
         this.hf = new InferenceClient(process.env.HF_TOKEN);
     }
 
-    private parseSafeJSON(text: string) {
-        try {
-            // First try direct parse
-            return JSON.parse(text);
-        } catch (e) {
-            // Try to extract JSON between { and }
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                try {
-                    // Try to fix missing closing quotes and braces
-                    let candidate = jsonMatch[0];
-                    if (!candidate.endsWith("}")) candidate += "}";
-                    return JSON.parse(candidate);
-                } catch (e2) {
-                    // Final attempt: aggressive cleanup (removing trailing commas, bad characters)
-                    const cleaned = jsonMatch[0]
-                        .replace(/,\s*([\]}])/g, "$1") // remove trailing commas
-                        .replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // ensure keys are quoted
-                        .replace(/:\s*"/g, ': "') // space after colon
-                        .replace(/,\s*"/g, ', "'); // space after comma
-                    return JSON.parse(cleaned);
-                }
-            }
-            throw e;
-        }
-    }
-
-    async generateViralScript(
+    /**
+     * Generate any image from a user prompt with configurable resolution and aspect ratio.
+     */
+    async generateImage(
         prompt: string,
-        niche: string,
-        purpose = "",
-        description = "",
-        brandName = "",
-        callCount = 0,
-        tone = ""
-    ) {
-        const systemPrompt = generateViralScriptPrompt(
-            prompt,
-            niche,
-            purpose,
-            description,
-            brandName,
-            callCount,
-            tone
-        );
+        resolution: string = "720P",
+        aspectRatio: string = "16:9"
+    ): Promise<string> {
 
-        let lastError;
-        // Retry logic with lower temperature for better JSON structure
-        for (const temp of [0.7, 0.2]) {
-            try {
-                const response = await this.hf.chatCompletion({
-                    model: "meta-llama/Meta-Llama-3-8B-Instruct",
-                    messages: [{ role: "user", content: systemPrompt }],
-                    max_tokens: 600,
-                    temperature: temp
-                });
+        const dims = ASPECT_DIMENSIONS[resolution]?.[aspectRatio]
+            ?? ASPECT_DIMENSIONS["720P"]["16:9"];
 
-                const text = response.choices[0].message.content;
-                if (!text) continue;
+        // Ensure dimensions are multiples of 8 (required by SDXL)
+        const width = Math.round(dims.width / 8) * 8;
+        const height = Math.round(dims.height / 8) * 8;
 
-                return this.parseSafeJSON(text);
-            } catch (err) {
-                lastError = err;
-                console.error(`AI Attempt with temp ${temp} failed:`, err);
-            }
-        }
-
-        throw lastError || new Error("AI generation failed");
-    }
-
-    async generateBackgroundImage(niche: string) {
-
-        const theme = nicheThemes[niche.toLowerCase()] ?? {
-            colors: "dark gradient background",
-            icons: "minimal geometric shapes",
-            mood: "clean social media graphic",
-            typography: "bold sans serif"
-        };
-
-        const prompt = `
-minimal social media background
-${theme.colors}
-${theme.icons}
-${theme.mood}
-
-NO TEXT
-NO WORDS
-abstract graphic background
-`;
+        console.log(`[AI] Generating image: resolution=${resolution}, aspectRatio=${aspectRatio}, dims=${width}x${height}`);
+        console.log(`[AI] Prompt: ${prompt.substring(0, 80)}...`);
 
         const image = await this.hf.textToImage({
             model: "stabilityai/stable-diffusion-xl-base-1.0",
-            inputs: prompt
+            inputs: prompt,
+            parameters: {
+                width,
+                height,
+            }
         });
 
-        const buffer = Buffer.from(await (image as any).arrayBuffer());
+        console.log(`[AI] Image generated successfully (${width}x${height})`);
 
+        const buffer = Buffer.from(await (image as any).arrayBuffer());
         return `data:image/png;base64,${buffer.toString("base64")}`;
     }
 

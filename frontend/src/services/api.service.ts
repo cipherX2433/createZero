@@ -13,13 +13,10 @@ export interface Script {
     created_at: string;
 }
 
-export interface GenerateScriptRequest {
+export interface GenerateImageRequest {
     prompt: string;
-    niche: string;
-    purpose?: string;
-    description?: string;
-    brand_name?: string;
-    tone?: string;
+    resolution?: string;
+    aspect_ratio?: string;
 }
 
 
@@ -43,7 +40,7 @@ export const apiService = {
         return result.data;
     },
 
-    async generateScript(data: GenerateScriptRequest): Promise<any> {
+    async generateImage(data: GenerateImageRequest): Promise<any> {
         const authHeader = await getAuthHeader();
         const response = await fetch(`${API_BASE_URL}/scripts/generate`, {
             method: 'POST',
@@ -53,7 +50,7 @@ export const apiService = {
             },
             body: JSON.stringify(data),
         });
-        if (!response.ok) throw new Error('Failed to generate script');
+        if (!response.ok) throw new Error('Failed to generate image');
         const result = await response.json();
         return result.data;
     },

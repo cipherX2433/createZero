@@ -1,84 +1,57 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { aiService } from "../ai/ai.service";
-import { selectLayout } from "../services/selectlayout.service";
-import { generateDesign } from "../services/design.service";
 import { supabase } from "../db/supabase";
 import { z } from "zod";
 
-const schema = z.object({
-  prompt: z.string(),
-  niche: z.string(),
-  purpose: z.string().optional(),
-  description: z.string().optional(),
-  brand_name: z.string().optional(),
-  tone: z.string().optional()
+const generateSchema = z.object({
+  prompt: z.string().min(1, "Prompt is required"),
+  resolution: z.string().optional().default("720P"),
+  aspect_ratio: z.string().optional().default("16:9"),
 });
 
 export const scriptController = {
 
   generate: async (request: FastifyRequest, reply: FastifyReply) => {
-
-    const { prompt, niche, purpose, description, brand_name, tone } =
-      schema.parse(request.body);
-
+    const { prompt, resolution, aspect_ratio } = generateSchema.parse(request.body);
     const user = (request as any).user;
 
-    const { count } = await supabase
-      .from("scripts")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id);
+    console.log(`[Controller] Generate request - resolution: ${resolution}, aspect_ratio: ${aspect_ratio}`);
 
-    const callCount = count ?? 0;
+    // Generate image with user's selected resolution and aspect ratio
+    const image = await aiService.generateImage(prompt, resolution, aspect_ratio);
 
-    const script = await aiService.generateViralScript(
-      prompt,
-      niche,
-      purpose,
-      description,
-      brand_name,
-      callCount,
-      tone
-    );
-
-    const background =
-      await aiService.generateBackgroundImage(niche);
-
-    const layout = selectLayout(script);
-
-    const design = generateDesign(niche);
-
+    // Store in database
     await supabase.from("scripts").insert({
       user_id: user.id,
-      hook: script.hook_quote,
-      body: script.subtext,
-      cta: script.cta,
-      caption: script.footer_line || "",
-      hashtags: script.hashtags,
-      viral_score: script.virality_score,
+      hook: prompt,
+      body: "",
+      cta: "",
+      caption: "",
+      hashtags: [],
+      viral_score: 0,
       metadata: {
-        headline: script.headline,
-        key_points: script.key_points,
-        virality_explanation: script.virality_explanation,
-        background,
-        layout,
-        design
+        prompt,
+        background: image,
+        model: "stable-diffusion-xl",
+        resolution,
+        aspect_ratio,
+        create_mode: "Image",
       }
     });
 
     return reply.send({
       success: true,
       data: {
-        script,
-        background,
-        layout,
-        design
+        image,
+        prompt,
+        model: "stable-diffusion-xl",
+        resolution,
+        aspect_ratio,
       }
     });
-
   },
 
   getHistory: async (request: FastifyRequest, reply: FastifyReply) => {
-
     const user = (request as any).user;
 
     const { data, error } = await supabase
@@ -86,7 +59,7 @@ export const scriptController = {
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(3);
+      .limit(50);
 
     if (error) {
       return reply.send({
@@ -99,7 +72,6 @@ export const scriptController = {
       success: true,
       data: data || []
     });
-
   }
 
 };
