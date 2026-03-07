@@ -3,6 +3,7 @@ import { apiService } from "@/services/api.service";
 import { useNavigate } from "react-router-dom";
 import { LogOut, Zap } from "lucide-react";
 import SocialPostCanvas from "@/components/socialPostCanva";
+import QuickAIInput from "@/components/QuickAIInput";
 
 const NICHES = [
     { label: "Tech / SaaS", value: "tech_saas", colors: { primary: "#6366f1", secondary: "#0ea5e9", bg: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)", accent: "#a78bfa", tag: "#1e1b4b" } },
@@ -15,23 +16,8 @@ const NICHES = [
     { label: "Education & Coaching", value: "education", colors: { primary: "#06b6d4", secondary: "#8b5cf6", bg: "linear-gradient(135deg, #0a1628, #0c2340, #0a1628)", accent: "#67e8f9", tag: "#083344" } },
 ];
 
-const GOALS = [
-    "Educate Audience",
-    "Drive Engagement",
-    "Build Authority",
-    "Generate Leads",
-    "Inspire & Motivate",
-    "Promote Product/Service",
-    "Grow Following",
-    "Spark Controversy / Debate",
-];
 
-const TONES = [
-    { label: "Professional", value: "professional", icon: "💼" },
-    { label: "Casual", value: "casual", icon: "☕" },
-    { label: "Aggressive", value: "aggressive", icon: "🔥" },
-    { label: "Storytelling", value: "storytelling", icon: "📖" },
-];
+// Unused constants removed for minimalist layout
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -94,27 +80,41 @@ export default function Dashboard() {
         setView("card");
     };
 
-    async function generatePost() {
-        if (!niche || !topic || !goal) {
-            setError("Please fill in Target Niche, Topic, and Post Goal.");
-            return;
+    // Old generatePost logic removed in favor of handleQuickCreate
+
+    const handleDownload = () => {
+        if (canvasRef.current) {
+            canvasRef.current.download();
         }
+    };
+
+    const scoreColor = post?.virality_score >= 85 ? "#10b981" : post?.virality_score >= 70 ? "#f59e0b" : "#ef4444";
+
+    const handleQuickCreate = async (quickPrompt: string) => {
+        setTopic(quickPrompt);
+        // Use default values for niche and goal if not already set
+        if (!niche) setNiche("tech_saas");
+        if (!goal) setGoal("Drive Engagement");
+
+        // Use a small delay to ensure state updates or just call generatePost logic directly with values
         setError("");
         setLoading(true);
         setPost(null);
 
         try {
-            const nicheLabel = NICHES.find(n => n.value === niche)?.label || niche;
+            const currentNiche = niche || "tech_saas";
+            const currentGoal = goal || "Drive Engagement";
+            const nicheLabel = NICHES.find(n => n.value === currentNiche)?.label || currentNiche;
+
             const apiData = await apiService.generateScript({
-                prompt: topic,
+                prompt: quickPrompt,
                 niche: nicheLabel,
-                purpose: goal,
+                purpose: currentGoal,
                 description,
                 brand_name: brandName,
                 tone: tone
             });
 
-            // Map the API response format: .script, .background, .layout
             const mappedPost = apiData.script ? {
                 ...apiData.script,
                 background: apiData.background,
@@ -124,21 +124,13 @@ export default function Dashboard() {
 
             setPost(mappedPost);
             setView("card");
-            fetchHistory(); // Refresh history
+            fetchHistory();
         } catch (e: any) {
             setError(e.message || "Failed to generate post. Please try again.");
         } finally {
             setLoading(false);
         }
-    }
-
-    const handleDownload = () => {
-        if (canvasRef.current) {
-            canvasRef.current.download();
-        }
     };
-
-    const scoreColor = post?.virality_score >= 85 ? "#10b981" : post?.virality_score >= 70 ? "#f59e0b" : "#ef4444";
 
     return (
         <div style={{ minHeight: "100vh", background: "#000000", fontFamily: "'Geist', sans-serif", color: "#fff", position: "relative", overflow: "hidden" }}>
@@ -190,210 +182,22 @@ export default function Dashboard() {
                 </button>
             </div>
 
-            <div style={{ display: "flex", minHeight: "calc(100vh - 65px)" }}>
-                {/* Left Panel */}
-                <div style={{ width: 400, minWidth: 400, borderRight: "1px solid rgba(255,255,255,0.06)", padding: 28, display: "flex", flexDirection: "column", gap: 22, overflowY: "auto" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minHeight: "calc(100vh - 65px)", padding: 40, width: '100%' }}>
+                <div style={{ width: '100%', maxWidth: 900, display: "flex", flexDirection: "column", gap: 40 }}>
 
-                    {/* Niche */}
-                    <div>
-                        <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: "#666", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                            <span>🎯</span> Target Niche
-                        </label>
-                        <div style={{ position: "relative" }}>
-                            <select
-                                className="input-field"
-                                value={niche}
-                                onChange={e => setNiche(e.target.value)}
-                                style={{ width: "100%", padding: "12px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: niche ? "#fff" : "#555", fontSize: 14, appearance: "none", cursor: "pointer", transition: "border-color 0.2s" }}
-                            >
-                                <option value="">Select your niche...</option>
-                                {NICHES.map(n => <option key={n.value} value={n.value}>{n.label}</option>)}
-                            </select>
-                            <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", color: "#555", pointerEvents: "none" }}>▾</span>
-                        </div>
-                        {niche && (
-                            <div style={{ marginTop: 8, display: "flex", gap: 6, flexWrap: "wrap" }}>
-                                {[colors.primary, colors.secondary, colors.accent].map((c, i) => (
-                                    <div key={i} style={{ width: 20, height: 20, borderRadius: 4, background: c, border: "2px solid rgba(255,255,255,0.1)" }} title={c} />
-                                ))}
-                                <span style={{ fontSize: 11, color: "#555", alignSelf: "center" }}>Niche color palette active</span>
+                    {/* Quick AI Input */}
+                    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                        <QuickAIInput
+                            loading={loading}
+                            onCreate={(prompt) => handleQuickCreate(prompt)}
+                        />
+                        {error && (
+                            <div style={{ padding: "10px 14px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, color: "#fca5a5", fontSize: 13, width: '100%', maxWidth: 900 }}>
+                                {error}
                             </div>
                         )}
                     </div>
 
-                    {/* Topic */}
-                    <div>
-                        <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: "#666", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                            <span>✦</span> Topic / Idea
-                        </label>
-                        <input
-                            className="input-field"
-                            type="text"
-                            placeholder="e.g. How to start vibe coding..."
-                            value={topic}
-                            onChange={e => setTopic(e.target.value)}
-                            style={{ width: "100%", padding: "12px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 14, transition: "border-color 0.2s" }}
-                        />
-                    </div>
-
-                    {/* Goal */}
-                    <div>
-                        <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: "#666", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                            <span>⚡</span> Post Goal
-                        </label>
-                        <div style={{ position: "relative" }}>
-                            <select
-                                className="input-field"
-                                value={goal}
-                                onChange={e => setGoal(e.target.value)}
-                                style={{ width: "100%", padding: "12px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: goal ? "#fff" : "#555", fontSize: 14, appearance: "none", cursor: "pointer", transition: "border-color 0.2s" }}
-                            >
-                                <option value="">Select goal...</option>
-                                {GOALS.map(g => <option key={g} value={g}>{g}</option>)}
-                            </select>
-                            <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", color: "#555", pointerEvents: "none" }}>▾</span>
-                        </div>
-                    </div>
-
-                    {/* Tone Selector */}
-                    <div>
-                        <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: "#666", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                            <span>🎭</span> Content Tone
-                        </label>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                            {TONES.map(t => (
-                                <button
-                                    key={t.value}
-                                    onClick={() => setTone(t.value)}
-                                    style={{
-                                        padding: "10px",
-                                        background: tone === t.value ? "rgba(20,184,166,0.1)" : "rgba(255,255,255,0.03)",
-                                        border: `1px solid ${tone === t.value ? "rgba(20,184,166,0.4)" : "rgba(255,255,255,0.08)"}`,
-                                        borderRadius: 10,
-                                        color: tone === t.value ? "#14b8a6" : "#888",
-                                        fontSize: 12,
-                                        fontWeight: 600,
-                                        cursor: "pointer",
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "center",
-                                        gap: 4,
-                                        transition: "all 0.2s"
-                                    }}
-                                >
-                                    <span style={{ fontSize: 16 }}>{t.icon}</span>
-                                    {t.label}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Brand Name */}
-                    <div>
-                        <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: "#666", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                            <span>🏷️</span> Brand / Product Name <span style={{ color: "#333", fontWeight: 400, textTransform: "none", letterSpacing: 0, fontSize: 10 }}>(optional)</span>
-                        </label>
-                        <input
-                            className="input-field"
-                            type="text"
-                            placeholder="e.g. CodeZero..."
-                            value={brandName}
-                            onChange={e => setBrandName(e.target.value)}
-                            style={{ width: "100%", padding: "12px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 14, transition: "border-color 0.2s" }}
-                        />
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                        <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: "#666", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
-                            <span>📄</span> Details <span style={{ color: "#333", fontWeight: 400, textTransform: "none", letterSpacing: 0, fontSize: 10 }}>(optional)</span>
-                        </label>
-                        <textarea
-                            className="input-field"
-                            placeholder="Add any product info, audience details, key messages, or context the AI should know..."
-                            value={description}
-                            onChange={e => setDescription(e.target.value)}
-                            rows={4}
-                            style={{ width: "100%", padding: "12px 16px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, color: "#fff", fontSize: 13, resize: "vertical", lineHeight: 1.6, transition: "border-color 0.2s" }}
-                        />
-                    </div>
-
-                    {error && (
-                        <div style={{ padding: "10px 14px", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, color: "#fca5a5", fontSize: 13 }}>
-                            {error}
-                        </div>
-                    )}
-
-                    <button
-                        className="gen-btn"
-                        onClick={generatePost}
-                        disabled={loading}
-                        style={{ padding: "15px 24px", background: loading ? "#222" : "white", border: "none", borderRadius: 12, color: loading ? "#555" : "black", fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, transition: "all 0.2s", marginTop: 4, fontFamily: "'Syne', sans-serif", letterSpacing: 0.5 }}
-                    >
-                        {loading ? (
-                            <><span className="pulse">⚡</span> Crafting your post...</>
-                        ) : (
-                            <><span>⚡</span> Generate Post</>
-                        )}
-                    </button>
-
-                    {post && (
-                        <div style={{ padding: "12px 16px", background: "rgba(255,255,255,0.03)", borderRadius: 10, border: "1px solid rgba(255,255,255,0.06)", fontSize: 12, color: "#666", lineHeight: 1.7 }}>
-                            <div style={{ color: "#999", fontWeight: 600, marginBottom: 6 }}>💡 Pro Tips</div>
-                            <div>• Post between 7-9am or 6-8pm for max reach</div>
-                            <div>• Reply to every comment in the first hour</div>
-                            <div>• Add to Stories within 30 min of posting</div>
-                        </div>
-                    )}
-
-                    {/* History Section */}
-                    {history.length > 0 && (
-                        <div style={{ marginTop: 10 }}>
-                            <label style={{ fontSize: 11, fontWeight: 600, letterSpacing: 1.5, color: "#666", textTransform: "uppercase", display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-                                <span>🕒</span> Recent Generations
-                            </label>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                                {history.map((h) => (
-                                    <div
-                                        key={h.id}
-                                        onClick={() => loadFromHistory(h)}
-                                        style={{
-                                            padding: "12px",
-                                            background: "rgba(255,255,255,0.02)",
-                                            border: "1px solid rgba(255,255,255,0.05)",
-                                            borderRadius: 10,
-                                            cursor: "pointer",
-                                            transition: "all 0.2s"
-                                        }}
-                                        onMouseOver={(e) => {
-                                            e.currentTarget.style.background = "rgba(255,255,255,0.05)";
-                                            e.currentTarget.style.borderColor = "rgba(20,184,166,0.3)";
-                                        }}
-                                        onMouseOut={(e) => {
-                                            e.currentTarget.style.background = "rgba(255,255,255,0.02)";
-                                            e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)";
-                                        }}
-                                    >
-                                        <div style={{ fontSize: 13, fontWeight: 600, color: "#eee", marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                            {h.metadata?.headline || h.hook}
-                                        </div>
-                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                            <div style={{ fontSize: 10, color: "#555" }}>
-                                                {new Date(h.created_at).toLocaleDateString()}
-                                            </div>
-                                            <div style={{ fontSize: 10, color: "#14b8a6", fontWeight: 700 }}>
-                                                ⚡ {h.viral_score}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Right Panel */}
-                <div style={{ flex: 1, padding: 32, display: "flex", flexDirection: "column", gap: 20, background: "#07070d" }}>
                     {/* Tabs */}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 10 }}>
                         <div style={{ display: "flex", background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: 4, gap: 2, border: "1px solid rgba(255,255,255,0.05)" }}>
@@ -417,7 +221,7 @@ export default function Dashboard() {
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, height: 400, color: "#333", textAlign: "center" }}>
                                 <div style={{ fontSize: 48 }}>⚡</div>
                                 <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 20, color: "#444" }}>Your post will appear here</div>
-                                <div style={{ fontSize: 14, color: "#333", maxWidth: 300 }}>Fill in the details on the left and hit Generate Post to create your viral content</div>
+                                <div style={{ fontSize: 14, color: "#333", maxWidth: 300 }}>Enter your idea above and hit Create to generate your viral content</div>
                             </div>
                         )}
 
