@@ -3,6 +3,7 @@ import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import Created from './pages/Created';
 import Onboarding from './pages/Onboarding';
 import AuthCallback from './pages/AuthCallback';
 import Profile from './pages/Profile';
@@ -50,6 +51,10 @@ function App() {
                 <Route
                     path="/dashboard"
                     element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
+                />
+                <Route
+                    path="/dashboard/created"
+                    element={isAuthenticated ? <Created /> : <Navigate to="/login" />}
                 />
                 <Route
                     path="/onboarding"
