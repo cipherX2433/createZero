@@ -13,8 +13,18 @@ export default function LandingPage() {
 
     return (
         <div className="min-h-screen bg-black text-white selection:bg-teal-500/30 font-geist">
+            {/* Background Image with Overlay */}
+            <div className="fixed inset-0 z-0 select-none pointer-events-none">
+                <img
+                    src="/assets/landing-bg.png"
+                    alt="AI Creator Background"
+                    className="w-full h-full object-cover opacity-60"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/80 to-black" />
+            </div>
+
             {/* Background Glows */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+            <div className="fixed inset-0 overflow-hidden pointer-events-none z-10">
                 <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] glow-teal opacity-50 blur-[120px]" />
                 <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] glow-white opacity-30 blur-[100px]" />
                 <div className="absolute top-[20%] left-[10%] w-[30%] h-[30%] glow-teal opacity-20 blur-[80px]" />
