@@ -26,6 +26,7 @@ export default function Created() {
     const [mediaTab, setMediaTab] = useState<MediaTab>('image');
     const [subFilter, setSubFilter] = useState<SubFilter>('created');
     const [loading, setLoading] = useState(false);
+    const [loadingHistory, setLoadingHistory] = useState(true);
     const [history, setHistory] = useState<any[]>([]);
     const [error, setError] = useState('');
     const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -33,11 +34,14 @@ export default function Created() {
     const hasGenerated = useRef(false);
 
     const fetchHistory = async () => {
+        setLoadingHistory(true);
         try {
             const data = await apiService.fetchScripts();
             setHistory(data || []);
         } catch (e) {
             console.error('Failed to fetch history:', e);
+        } finally {
+            setLoadingHistory(false);
         }
     };
 
@@ -230,11 +234,19 @@ export default function Created() {
                         )}
 
                         {/* Empty */}
-                        {imageHistory.length === 0 && !loading && (
+                        {!loadingHistory && imageHistory.length === 0 && !loading && (
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, minHeight: 300, color: '#333', textAlign: 'center' }}>
                                 <div style={{ fontSize: 40 }}>🖼</div>
                                 <div style={{ fontSize: 14, color: '#444' }}>No images created yet</div>
                                 <div style={{ fontSize: 12, color: '#333' }}>Go to Home and describe what you want to see</div>
+                            </div>
+                        )}
+
+                        {/* History Loading */}
+                        {loadingHistory && imageHistory.length === 0 && (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, minHeight: 300 }}>
+                                <div className="pulse" style={{ fontSize: 32 }}>⏳</div>
+                                <div style={{ fontSize: 13, color: '#666' }}>Fetching your creations...</div>
                             </div>
                         )}
 
@@ -262,6 +274,7 @@ export default function Created() {
                                             <img
                                                 src={h.metadata?.background}
                                                 alt={h.metadata?.prompt || 'Generated image'}
+                                                loading="lazy"
                                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                             />
                                         </div>
@@ -308,6 +321,7 @@ export default function Created() {
                             <img
                                 src={selectedItem.metadata?.background}
                                 alt={selectedItem.metadata?.prompt || 'Image'}
+                                loading="lazy"
                                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             />
                         </div>
@@ -441,6 +455,7 @@ export default function Created() {
                                     <img
                                         src={selectedItem.metadata.background}
                                         alt="Thumbnail"
+                                        loading="lazy"
                                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     />
                                 </div>
