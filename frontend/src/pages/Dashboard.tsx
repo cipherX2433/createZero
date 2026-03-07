@@ -178,7 +178,7 @@ export default function Dashboard() {
                         <div style={{ fontFamily: "'Syne', sans-serif", fontWeight: 800, fontSize: 18, letterSpacing: "-0.5px" }}>
                             Creator<span style={{ color: "#14b8a6" }}>Zero</span>
                         </div>
-                        <div style={{ fontSize: 10, color: "#444", marginTop: 1, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Elite Neural Engine</div>
+                        <div style={{ fontSize: 10, color: "#14b8a6", marginTop: 1, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>Image Generator Dashboard</div>
                     </div>
                 </div>
 

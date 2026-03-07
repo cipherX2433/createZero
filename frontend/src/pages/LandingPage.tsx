@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Zap, BarChart3, Target, Shield, Cpu, Play, User } from 'lucide-react';
+import { ArrowRight, Zap, BarChart3, Target, Shield, Cpu, Play, User, ChevronDown, Video, Image as ImageIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export default function LandingPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [showFeatures, setShowFeatures] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('auth_token');
@@ -29,8 +30,44 @@ export default function LandingPage() {
                         </span>
                     </div>
                     <div className="hidden md:flex items-center gap-6 text-[13px] font-medium text-white/60">
-                        <a href="#features" className="hover:text-white transition-colors">Home</a>
-                        <a href="#features" className="hover:text-white transition-colors">Features</a>
+                        <a href="#" className="hover:text-white transition-colors">Home</a>
+                        <div
+                            className="relative group"
+                            onMouseEnter={() => setShowFeatures(true)}
+                            onMouseLeave={() => setShowFeatures(false)}
+                        >
+                            <button className="flex items-center gap-1 hover:text-white transition-colors py-2">
+                                Features
+                                <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${showFeatures ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            <div className={`absolute top-full left-0 pt-2 w-48 transition-all duration-300 origin-top ${showFeatures ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                                <div className="glass rounded-2xl p-2">
+                                    <Link
+                                        to="/dashboard"
+                                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition-colors group/item"
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-teal-400/10 flex items-center justify-center text-teal-400">
+                                            <ImageIcon className="w-4 h-4" />
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="text-[12px] font-bold text-white group-hover/item:text-teal-400 transition-colors">Text to Image</div>
+                                            <div className="text-[10px] text-white/40">AI Image Generator</div>
+                                        </div>
+                                    </Link>
+                                    <div className="flex items-center gap-3 p-3 rounded-xl cursor-not-allowed group/item opacity-50">
+                                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/40">
+                                            <Video className="w-4 h-4" />
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="text-[12px] font-bold text-white/60">Text to Video</div>
+                                            <div className="text-[10px] text-white/40">Coming Soon</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
                         <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
                     </div>
