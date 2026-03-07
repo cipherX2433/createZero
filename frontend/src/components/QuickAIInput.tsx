@@ -420,7 +420,7 @@ const QuickAIInput: React.FC<QuickAIInputProps> = ({ onCreate, loading }) => {
                         overflowY: 'auto'
                     }}>
                         {/* Header */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px', marginBottom: '4px' }}>
                             <div style={{ fontSize: 16, fontWeight: 700, color: '#eee', display: 'flex', alignItems: 'center', gap: 8 }}>
                                 Template
                                 <span style={{
@@ -430,24 +430,47 @@ const QuickAIInput: React.FC<QuickAIInputProps> = ({ onCreate, loading }) => {
                                     fontSize: 11, color: '#888', cursor: 'help'
                                 }}>?</span>
                             </div>
-                            {/* Search */}
-                            <div style={{
-                                display: 'flex', alignItems: 'center', gap: 8,
-                                background: 'rgba(255,255,255,0.06)', borderRadius: 10,
-                                padding: '8px 14px', border: '1px solid rgba(255,255,255,0.08)',
-                                width: 240
-                            }}>
-                                <input
-                                    type="text"
-                                    placeholder="Search template, e.g. love"
-                                    value={templateSearch}
-                                    onChange={(e) => setTemplateSearch(e.target.value)}
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                {/* Search */}
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', gap: 8,
+                                    background: 'rgba(255,255,255,0.06)', borderRadius: 10,
+                                    padding: '8px 14px', border: '1px solid rgba(255,255,255,0.08)',
+                                    width: 220
+                                }}>
+                                    <input
+                                        type="text"
+                                        placeholder="Search template..."
+                                        value={templateSearch}
+                                        onChange={(e) => setTemplateSearch(e.target.value)}
+                                        style={{
+                                            flex: 1, background: 'none', border: 'none', outline: 'none',
+                                            color: '#ccc', fontSize: 12, fontFamily: 'inherit'
+                                        }}
+                                    />
+                                    <Search size={14} style={{ color: '#666' }} />
+                                </div>
+
+                                <button
+                                    onClick={() => setShowTemplates(false)}
                                     style={{
-                                        flex: 1, background: 'none', border: 'none', outline: 'none',
-                                        color: '#ccc', fontSize: 12, fontFamily: 'inherit'
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        width: 32, height: 32, borderRadius: 8,
+                                        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                                        color: '#888', cursor: 'pointer', transition: 'all 0.2s'
                                     }}
-                                />
-                                <Search size={14} style={{ color: '#666' }} />
+                                    onMouseOver={(e) => {
+                                        e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                                        e.currentTarget.style.color = '#fff';
+                                    }}
+                                    onMouseOut={(e) => {
+                                        e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                                        e.currentTarget.style.color = '#888';
+                                    }}
+                                >
+                                    <X size={18} />
+                                </button>
                             </div>
                         </div>
 
