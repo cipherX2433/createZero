@@ -36,8 +36,8 @@ export default function Created() {
     const [resultVideo, setResultVideo] = useState<string | null>(null);
     const [error, setError] = useState<string>('');
     const [loading, setLoading] = useState(false);
-
     // ── UI state ─────────────────────────────────────────────────────────────
+    const [loadingHistory, setLoadingHistory] = useState(true);
     const [history, setHistory] = useState<any[]>([]);
     const [selectedItem, setSelectedItem] = useState<any>(null);
     const [copiedPrompt, setCopiedPrompt] = useState(false);
@@ -49,6 +49,7 @@ export default function Created() {
 
     // ── History fetch (reads createMode at call time via param) ──────────────
     const fetchHistory = async (mode: CreateMode) => {
+        setLoadingHistory(true);
         try {
             if (mode === 'Image') {
                 const data = await apiService.fetchScripts();
@@ -59,6 +60,8 @@ export default function Created() {
             }
         } catch (e) {
             console.error('Failed to fetch history:', e);
+        } finally {
+            setLoadingHistory(false);
         }
     };
 
@@ -314,13 +317,22 @@ export default function Created() {
                 {/* Image Gallery */}
                 {createMode === 'Image' && (
                     <div className="fade-up">
-                        {imageHistory.length === 0 && !loading && (
+                        
+                        {/* History Loading */}
+                        {loadingHistory && imageHistory.length === 0 && (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, minHeight: 300 }}>
+                                <div className="pulse" style={{ fontSize: 32 }}>⏳</div>
+                                <div style={{ fontSize: 13, color: '#666' }}>Fetching your creations...</div>
+                            </div>
+                        )}
+                        {!loadingHistory && imageHistory.length === 0 && !loading && (
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, minHeight: 300, color: '#333', textAlign: 'center' }}>
                                 <div style={{ fontSize: 40 }}>🖼</div>
                                 <div style={{ fontSize: 14, color: '#444' }}>No images created yet</div>
                                 <div style={{ fontSize: 12, color: '#333' }}>Type a prompt above and click Generate Image</div>
                             </div>
                         )}
+
                         {imageHistory.length > 0 && (
                             <div>
                                 <div style={{ fontSize: 13, color: '#555', fontWeight: 600, marginBottom: 16, textTransform: 'uppercase', letterSpacing: 1 }}>History</div>
