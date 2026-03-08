@@ -1,4 +1,10 @@
+
 import { createClient } from '@supabase/supabase-js'
+
+console.log("ENV CHECK:", {
+  url: process.env.SUPABASE_URL,
+  service: process.env.SUPABASE_SERVICE_ROLE_KEY,
+})
 
 const supabaseUrl = process.env.SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!

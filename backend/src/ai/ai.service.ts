@@ -1,4 +1,11 @@
 import { InferenceClient } from "@huggingface/inference";
+import Replicate from "replicate";
+import { supabase } from "../db/supabase";
+import dns from "node:dns";
+
+// Fix for Node 18+ fetch IPv6 routing timeouts to AWS/Supabase
+dns.setDefaultResultOrder('ipv4first');
+
 
 // Map aspect ratios to pixel dimensions for SDXL
 // SDXL works best with dimensions that are multiples of 8
@@ -32,9 +39,53 @@ const ASPECT_DIMENSIONS: Record<string, Record<string, { width: number; height: 
 export class AIService {
 
     private hf: InferenceClient;
+    private replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
 
     constructor() {
+        console.log("HF TOKEN CHECK:",
+            process.env.HF_TOKEN
+                ? `FOUND → ${process.env.HF_TOKEN.slice(0, 12)}...`
+                : "MISSING ❌"
+        );
+
         this.hf = new InferenceClient(process.env.HF_TOKEN);
+    }
+
+    /**
+     * Upload a buffer to Supabase Storage and return the public URL.
+     * Images → DevZeroImage bucket | Videos → DevZeroVideo bucket
+     */
+    private async uploadToStorage(
+        buffer: Buffer,
+        mimeType: "image/png" | "video/mp4"
+    ): Promise<string> {
+        const isImage = mimeType === "image/png";
+        const bucket = isImage ? "DevZeroImage" : "DevZeroVideo";
+        const ext = isImage ? "png" : "mp4";
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+        // Wrap the NodeJS Buffer in a native JS Blob. Node's internal fetch handles
+        // Blobs perfectly, completely avoiding the DB timeout / stream hang bugs.
+        const blob = new Blob([new Uint8Array(buffer)], { type: mimeType });
+
+        const { error } = await supabase.storage
+            .from(bucket)
+            .upload(fileName, blob, {
+                contentType: mimeType,
+                upsert: false,
+            });
+
+        if (error) {
+            console.error("[Storage] Upload failed:", error.message);
+            throw new Error(`Storage upload failed: ${error.message}`);
+        }
+
+        const { data: urlData } = supabase.storage
+            .from(bucket)
+            .getPublicUrl(fileName);
+
+        console.log(`[Storage] Uploaded to ${bucket}:`, urlData.publicUrl);
+        return urlData.publicUrl;
     }
 
     /**
@@ -68,7 +119,36 @@ export class AIService {
         console.log(`[AI] Image generated successfully (${width}x${height})`);
 
         const buffer = Buffer.from(await (image as any).arrayBuffer());
-        return `data:image/png;base64,${buffer.toString("base64")}`;
+        return await this.uploadToStorage(buffer, "image/png");
+    }
+
+    /**
+     * Generate a short video clip from a user prompt via Replicate (xai/grok-imagine-video).
+     */
+    async generateVideo(
+        prompt: string,
+        resolution: string = "720P",
+        aspectRatio: string = "16:9"
+    ): Promise<string> {
+        console.log(`[AI] Generating video via Replicate Grok: ${prompt.substring(0, 80)}`);
+
+        const output = await this.replicate.run(
+            "xai/grok-imagine-video",
+            {
+                input: {
+                    prompt
+                }
+            }
+        ) as any;
+
+        // Replicate returns a URL string directly for this model
+        const videoUrl = Array.isArray(output) ? output[0] : output;
+
+        const response = await fetch(videoUrl);
+        const buffer = Buffer.from(await response.arrayBuffer());
+
+        console.log("[AI] Grok video generated successfully");
+        return await this.uploadToStorage(buffer, "video/mp4");
     }
 
 }

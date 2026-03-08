@@ -19,6 +19,13 @@ export interface GenerateImageRequest {
     aspect_ratio?: string;
 }
 
+export interface GenerateVideoRequest {
+    prompt: string;
+    resolution?: string;
+    aspect_ratio?: string;
+    mode: 'Image' | 'Video';
+}
+
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
 
@@ -50,7 +57,28 @@ export const apiService = {
             },
             body: JSON.stringify(data),
         });
-        if (!response.ok) throw new Error('Failed to generate image');
+        if (!response.ok) {
+            const errJson = await response.json().catch(() => ({}));
+            throw new Error(errJson.error || 'Failed to generate image');
+        }
+        const result = await response.json();
+        return result.data;
+    },
+
+    async generateVideoInline(data: GenerateVideoRequest): Promise<any> {
+        const authHeader = await getAuthHeader();
+        const response = await fetch(`${API_BASE_URL}/scripts/generate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...authHeader,
+            },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) {
+            const errJson = await response.json().catch(() => ({}));
+            throw new Error(errJson.error || 'Failed to generate video');
+        }
         const result = await response.json();
         return result.data;
     },
@@ -155,8 +183,10 @@ export const apiService = {
     },
 
     async fetchVideoHistory(): Promise<any[]> {
+        // Videos are stored in the scripts table alongside images.
+        // Filter by metadata.create_mode === 'Video' or presence of metadata.video.
         const authHeader = await getAuthHeader();
-        const response = await fetch(`${API_BASE_URL}/video/history`, {
+        const response = await fetch(`${API_BASE_URL}/scripts/history`, {
             headers: {
                 ...authHeader,
             },
@@ -166,7 +196,10 @@ export const apiService = {
             return [];
         }
         const result = await response.json();
-        return result.data || [];
+        const all: any[] = result.data || [];
+        return all.filter(
+            (item) => item.metadata?.create_mode === 'Video' || item.metadata?.video
+        );
     },
 
     logout() {

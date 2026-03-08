@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Image, Video, Layout, Sparkles } from 'lucide-react';
 
 interface QuickAIInputProps {
-    onCreate: (prompt: string, type: 'image' | 'video' | 'template', resolution: string, aspectRatio: string) => void;
+    onCreate: (prompt: string, type: 'image' | 'video' | 'template', resolution: string, aspectRatio: string, mode: 'Image' | 'Video') => void;
     loading?: boolean;
 }
 
@@ -30,13 +30,14 @@ const QuickAIInput: React.FC<QuickAIInputProps> = ({ onCreate, loading }) => {
 
     const tabs: Array<{ id: 'image' | 'video' | 'template', label: string, icon: React.ReactNode, disabled?: boolean }> = [
         { id: 'image', label: 'Image', icon: <Image size={14} /> },
-        { id: 'video', label: 'Video', icon: <Video size={14} />, disabled: true },
+        { id: 'video', label: 'Video', icon: <Video size={14} /> },
         { id: 'template', label: 'Template', icon: <Layout size={14} />, disabled: true },
     ];
 
     const handleCreate = () => {
         if (prompt.trim()) {
-            onCreate(prompt, activeTab, resolution, aspectRatio);
+            const mode: 'Image' | 'Video' = activeTab === 'video' ? 'Video' : 'Image';
+            onCreate(prompt, activeTab, resolution, aspectRatio, mode);
         }
     };
 
@@ -134,7 +135,7 @@ const QuickAIInput: React.FC<QuickAIInputProps> = ({ onCreate, loading }) => {
                 <textarea
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    placeholder="Describe any image you want to create..."
+                    placeholder={activeTab === 'video' ? 'Describe any video you want to create...' : 'Describe any image you want to create...'}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault();

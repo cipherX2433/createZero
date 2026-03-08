@@ -7,7 +7,7 @@ export default function Dashboard() {
     const navigate = useNavigate();
     const [error, setError] = useState('');
 
-    const handleQuickCreate = (prompt: string, _type?: string, resolution?: string, aspectRatio?: string) => {
+    const handleQuickCreate = (prompt: string, _type?: string, resolution?: string, aspectRatio?: string, mode?: 'Image' | 'Video') => {
         if (!prompt.trim()) {
             setError('Please enter a prompt.');
             return;
@@ -18,7 +18,8 @@ export default function Dashboard() {
                 prompt,
                 resolution: resolution || '720P',
                 aspectRatio: aspectRatio || '16:9',
-                autoGenerate: true
+                autoGenerate: true,
+                mode: mode || 'Image',
             }
         });
     };
@@ -129,7 +130,7 @@ export default function Dashboard() {
                     <div style={{ width: '100%', maxWidth: 900 }}>
                         <QuickAIInput
                             loading={false}
-                            onCreate={(prompt, type, resolution, aspectRatio) => handleQuickCreate(prompt, type, resolution, aspectRatio)}
+                            onCreate={(prompt, type, resolution, aspectRatio, mode) => handleQuickCreate(prompt, type, resolution, aspectRatio, mode)}
                         />
                     </div>
                 </div>
