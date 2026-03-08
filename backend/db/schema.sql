@@ -127,3 +127,41 @@ GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
 GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated;
 
+
+-- 6. Videos Table (AI Video Generation)
+CREATE TABLE IF NOT EXISTS public.videos (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+    prompt TEXT NOT NULL,
+    niche TEXT NOT NULL,
+    duration INTEGER,
+    resolution TEXT,
+    style TEXT,
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
+    video_url TEXT,
+    external_job_id TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.videos ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own videos" ON public.videos
+    FOR SELECT USING (
+        (current_setting('request.jwt.claims', true)::json->>'sub')::uuid = user_id
+    );
+
+CREATE POLICY "Users can create own videos" ON public.videos
+    FOR INSERT WITH CHECK (
+        (current_setting('request.jwt.claims', true)::json->>'sub')::uuid = user_id
+    );
+
+CREATE POLICY "Users can update own videos" ON public.videos
+    FOR UPDATE USING (
+        (current_setting('request.jwt.claims', true)::json->>'sub')::uuid = user_id
+    );
+
+CREATE POLICY "Users can delete own videos" ON public.videos
+    FOR DELETE USING (
+        (current_setting('request.jwt.claims', true)::json->>'sub')::uuid = user_id
+    );

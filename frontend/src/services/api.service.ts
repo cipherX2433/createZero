@@ -126,6 +126,49 @@ export const apiService = {
         return result.data;
     },
 
+    // --- VIDEO GENERATION API ---
+    async generateVideo(data: { prompt: string, niche: string, duration?: number, resolution?: string, style?: string }): Promise<any> {
+        const authHeader = await getAuthHeader();
+        const response = await fetch(`${API_BASE_URL}/video/generate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...authHeader,
+            },
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error('Failed to generate video');
+        const result = await response.json();
+        return result.data;
+    },
+
+    async checkVideoStatus(jobId: string): Promise<any> {
+        const authHeader = await getAuthHeader();
+        const response = await fetch(`${API_BASE_URL}/video/status/${jobId}`, {
+            headers: {
+                ...authHeader,
+            },
+        });
+        if (!response.ok) throw new Error('Failed to check video status');
+        const result = await response.json();
+        return result.data;
+    },
+
+    async fetchVideoHistory(): Promise<any[]> {
+        const authHeader = await getAuthHeader();
+        const response = await fetch(`${API_BASE_URL}/video/history`, {
+            headers: {
+                ...authHeader,
+            },
+        });
+        if (!response.ok) {
+            console.error('Failed to fetch video history');
+            return [];
+        }
+        const result = await response.json();
+        return result.data || [];
+    },
+
     logout() {
         localStorage.removeItem('auth_token');
     }

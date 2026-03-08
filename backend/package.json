@@ -31,6 +31,7 @@
     "@fastify/helmet": "^13.0.2",
     "@huggingface/inference": "^4.13.14",
     "bcryptjs": "^3.0.3",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "replicate": "^1.4.0"
   }
 }

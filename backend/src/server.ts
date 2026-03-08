@@ -1,9 +1,10 @@
+import 'dotenv/config'
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
-import * as dotenv from 'dotenv';
+// import * as dotenv from 'dotenv';
 
-dotenv.config();
+// dotenv.config();
 
 const server = Fastify({
     logger: true,
@@ -29,9 +30,11 @@ server.setErrorHandler((error: any, request, reply) => {
 // Register Routes
 import authRoutes from './routes/auth.routes';
 import scriptRoutes from './routes/script.routes';
+import videoRoutes from './video/video.routes';
 
 server.register(authRoutes, { prefix: '/api/v1/auth' });
 server.register(scriptRoutes, { prefix: '/api/v1/scripts' });
+server.register(videoRoutes, { prefix: '/api/v1/video' });
 
 // Health Check
 server.get('/health', async () => {
