@@ -1,5 +1,9 @@
+import dns from "node:dns";
+import { createClient } from "@supabase/supabase-js";
 
-import { createClient } from '@supabase/supabase-js'
+// Fix for Node 18+ fetch IPv6 routing timeouts to AWS/Supabase
+dns.setDefaultResultOrder('ipv4first');
+
 
 console.log("ENV CHECK:", {
   url: process.env.SUPABASE_URL,
