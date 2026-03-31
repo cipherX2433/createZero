@@ -1,7 +1,7 @@
-import { InferenceClient } from "@huggingface/inference";
-import { GoogleGenAI } from "@google/genai";
-import { supabase } from "../db/supabase";
 import dns from "node:dns";
+import { GoogleGenAI } from "@google/genai";
+import { InferenceClient } from "@huggingface/inference";
+import { supabase } from "../db/supabase";
 
 // Fix for Node 18+ fetch IPv6 routing timeouts to AWS/Supabase
 dns.setDefaultResultOrder('ipv4first');
